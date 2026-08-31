@@ -9,10 +9,13 @@ const { PlacesTestUtils } = ChromeUtils.importESModule(
 const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
   "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs"
 );
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
 
-const TEST_URL = "https://example.com/?zen-urlbar-container-title-test=617db8";
-const ESSENTIAL_TEST_URL =
-  "https://example.com/?zen-urlbar-essential-title-test=617db8";
+const TEST_ROOT = "https://example.com/browser/zen/tests/urlbar/";
+const TEST_URL = `${TEST_ROOT}zen-urlbar-container-title-test-617db8`;
+const ESSENTIAL_TEST_URL = `${TEST_ROOT}zen-urlbar-essential-title-test-617db8`;
 const WORKSPACE_NAMES = [
   "URLbar Personal Container 617db8",
   "URLbar Work Container 617db8",
@@ -21,19 +24,29 @@ const WORKSPACE_NAMES = [
 add_setup(async function () {
   await PlacesUtils.promiseLargeCacheDBConnection();
   await UrlbarProviderOpenTabs.promiseDBPopulated;
+  await PlacesTestUtils.addVisits([TEST_URL, ESSENTIAL_TEST_URL]);
+  registerCleanupFunction(() => PlacesUtils.history.clear());
 });
+
+async function addContainerTab(url, userContextId) {
+  return BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: () => {
+      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url, {
+        skipAnimation: true,
+        userContextId,
+      });
+    },
+  });
+}
 
 add_task(async function test_container_tabs_use_their_live_labels() {
   const tabs = [];
 
   try {
     for (const userContextId of [1, 2]) {
-      const tab = BrowserTestUtils.addTab(gBrowser, TEST_URL, {
-        skipAnimation: true,
-        userContextId,
-      });
+      const tab = await addContainerTab(TEST_URL, userContextId);
       tabs.push(tab);
-      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     }
 
     const labels = ["Personal Gmail", "Work Gmail"];
@@ -49,13 +62,11 @@ add_task(async function test_container_tabs_use_their_live_labels() {
       "The container tabs should have distinct live labels"
     );
 
-    await PlacesTestUtils.promiseAsyncUpdates();
-
-    const searchTab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      "about:newtab"
-    );
+    const searchTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
+      skipAnimation: true,
+    });
     tabs.push(searchTab);
+    await BrowserTestUtils.switchTab(gBrowser, searchTab);
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -81,9 +92,14 @@ add_task(async function test_container_tabs_use_their_live_labels() {
       "Switch-to-tab results should use each container tab's live label"
     );
   } finally {
+    if (UrlbarTestUtils.isPopupOpen(window)) {
+      await UrlbarTestUtils.promisePopupClose(window, () =>
+        EventUtils.synthesizeKey("KEY_Escape")
+      );
+    }
     for (const tab of tabs.reverse()) {
       if (gBrowser.tabs.includes(tab)) {
-        BrowserTestUtils.removeTab(tab);
+        await BrowserTestUtils.removeTab(tab);
       }
     }
   }
@@ -92,30 +108,25 @@ add_task(async function test_container_tabs_use_their_live_labels() {
 add_task(async function test_inactive_container_essential_uses_live_label() {
   const originalWorkspaceId = gZenWorkspaces.activeWorkspace;
   const workspaceIds = [];
+  const workspaces = [];
   const tabs = [];
   const labels = ["Personal Gmail", "Work Gmail"];
 
   try {
     for (let index = 0; index < WORKSPACE_NAMES.length; index++) {
-      await gZenWorkspaces.createAndSaveWorkspace(
+      const workspace = await gZenWorkspaces.createAndSaveWorkspace(
         WORKSPACE_NAMES[index],
         undefined,
         false,
         index + 1
       );
-      const workspace = gZenWorkspaces
-        .getWorkspaces()
-        .find(candidate => candidate.name == WORKSPACE_NAMES[index]);
       Assert.ok(workspace, `Created ${WORKSPACE_NAMES[index]}`);
+      workspaces.push(workspace);
       workspaceIds.push(workspace.uuid);
 
       await gZenWorkspaces.changeWorkspace(workspace);
-      const tab = BrowserTestUtils.addTab(gBrowser, ESSENTIAL_TEST_URL, {
-        skipAnimation: true,
-        userContextId: index + 1,
-      });
+      const tab = await addContainerTab(ESSENTIAL_TEST_URL, index + 1);
       tabs.push(tab);
-      await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
       tab.zenStaticLabel = labels[index];
       gBrowser._setTabLabel(tab, labels[index], {
@@ -133,10 +144,7 @@ add_task(async function test_inactive_container_essential_uses_live_label() {
       );
     }
 
-    const activeWorkspace = gZenWorkspaces
-      .getWorkspaces()
-      .find(workspace => workspace.uuid == workspaceIds[1]);
-    await gZenWorkspaces.changeWorkspace(activeWorkspace);
+    await gZenWorkspaces.changeWorkspace(workspaces[1]);
 
     Assert.ok(
       !gBrowser.tabs.includes(tabs[0]),
@@ -147,12 +155,8 @@ add_task(async function test_inactive_container_essential_uses_live_label() {
       "The inactive workspace Essential should remain in allStoredTabs"
     );
 
-    const searchTab = BrowserTestUtils.addTab(gBrowser, "about:newtab", {
-      skipAnimation: true,
-      userContextId: 2,
-    });
+    const searchTab = await addContainerTab(`${TEST_ROOT}search-source`, 2);
     tabs.push(searchTab);
-    await BrowserTestUtils.switchTab(gBrowser, searchTab);
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,

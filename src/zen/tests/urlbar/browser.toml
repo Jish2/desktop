@@ -3,26 +3,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [DEFAULT]
-prefs = ["browser.urlbar.closeOnWindowBlur=false"]
+prefs = [
+  "browser.urlbar.closeOnWindowBlur=false",
+  "browser.urlbar.suggest.openpage=true",
+  "privacy.userContext.enabled=true",
+  "privacy.userContext.ui.enabled=true",
+  "zen.workspaces.separate-essentials=true",
+]
 support-files = [
   "head.js",
   "!/browser/components/urlbar/tests/browser/head.js",
 ]
 
 ["browser_container_tab_titles.js"]
-prefs = ["zen.workspaces.separate-essentials=true"]
 
 ["browser_floating_urlbar.js"]
 
 ["browser_issue_7385.js"]
 
 ["browser_essential_tabs.js"]
-prefs = [
-  "browser.urlbar.suggest.openpage=true",
-  "privacy.userContext.enabled=true",
-  "privacy.userContext.ui.enabled=true",
-  "zen.workspaces.separate-essentials=true",
-]
 
 ["browser_essential_tab_history.js"]
-prefs = ["browser.urlbar.suggest.openpage=true"]

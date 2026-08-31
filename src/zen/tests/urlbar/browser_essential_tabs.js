@@ -8,23 +8,33 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+  ZenUrlbarProviderEssentials:
+    "resource:///modules/ZenUBEssentialsProvider.sys.mjs",
 });
 
 const PROVIDER_NAME = "ZenUrlbarProviderEssentials";
 const TEST_ROOT = "https://example.com/browser/zen/tests/urlbar/";
 
-function addTab(win, path, title, options = {}) {
+async function addTab(win, path, title, options = {}) {
+  const url = TEST_ROOT + path;
+  const opened = options.createLazyBrowser
+    ? null
+    : BrowserTestUtils.waitForNewTab(win.gBrowser, url, true);
   const tab = win.gBrowser.addTrustedTab(TEST_ROOT + path, {
     inBackground: true,
     skipAnimation: true,
     ...options,
   });
-  tab.setAttribute("label", title);
+  await opened;
+  tab.zenStaticLabel = title;
+  win.gBrowser._setTabLabel(tab, title, {
+    _zenChangeLabelFlag: true,
+  });
   return tab;
 }
 
-function addEssential(win, path, title, options = {}) {
-  const tab = addTab(win, path, title, options);
+async function addEssential(win, path, title, options = {}) {
+  const tab = await addTab(win, path, title, options);
   win.gZenPinnedTabManager.addToEssentials(tab);
   Assert.ok(tab.hasAttribute("zen-essential"), `${title} is an Essential`);
   return tab;
@@ -55,7 +65,11 @@ async function closePopup(win) {
 }
 
 async function pickRow(win, row, condition, message) {
-  EventUtils.synthesizeMouseAtCenter(row, {}, win);
+  win.gURLBar.pickResult(
+    row.result,
+    new KeyboardEvent("keydown", { key: "Enter" }),
+    row
+  );
   await TestUtils.waitForCondition(condition, message);
 }
 
@@ -70,8 +84,12 @@ add_task(async function test_essential_is_first_in_ordinary_search() {
     gBrowser,
     TEST_ROOT + "ranking-source"
   );
-  const ordinary = addTab(window, "settings-ordinary", "Settings ordinary tab");
-  const essential = addEssential(
+  const ordinary = await addTab(
+    window,
+    "settings-ordinary",
+    "Settings ordinary tab"
+  );
+  const essential = await addEssential(
     window,
     "settings-essential",
     "Settings Essential"
@@ -137,8 +155,8 @@ add_task(async function test_selection_uses_exact_essential_target() {
     TEST_ROOT + "exact-source"
   );
   const urlPath = "duplicate-mail";
-  const ordinary = addTab(window, urlPath, "Ordinary duplicate");
-  const essential = addEssential(window, urlPath, "Mail Essential");
+  const ordinary = await addTab(window, urlPath, "Ordinary duplicate");
+  const essential = await addEssential(window, urlPath, "Mail Essential");
 
   try {
     const tabCount = gBrowser.tabs.length;
@@ -174,12 +192,12 @@ add_task(async function test_multiple_same_url_essentials_keep_identity() {
     gBrowser,
     TEST_ROOT + "multiple-source"
   );
-  const first = addEssential(
+  const first = await addEssential(
     window,
     "shared-essential-url",
     "Calendar Essential"
   );
-  const second = addEssential(
+  const second = await addEssential(
     window,
     "shared-essential-url",
     "Mail Essential Target"
@@ -216,7 +234,7 @@ add_task(async function test_container_essential_switches_workspace() {
     1
   );
   await gZenWorkspaces.changeWorkspace(containerWorkspace);
-  const essential = addEssential(
+  const essential = await addEssential(
     window,
     "container-mail",
     "Container Mail Essential",
@@ -248,7 +266,7 @@ add_task(async function test_pending_essential_uses_session_state() {
     gBrowser,
     TEST_ROOT + "pending-source"
   );
-  const essential = addEssential(
+  const essential = await addEssential(
     window,
     "pending-mail",
     "Pending Mail Essential",
@@ -283,7 +301,11 @@ add_task(async function test_stale_result_does_not_open_url() {
     gBrowser,
     TEST_ROOT + "stale-source"
   );
-  const essential = addEssential(window, "stale-mail", "Stale Mail Essential");
+  const essential = await addEssential(
+    window,
+    "stale-mail",
+    "Stale Mail Essential"
+  );
 
   try {
     const rows = await search(window, "stale mail");
@@ -317,9 +339,10 @@ add_task(async function test_stale_result_does_not_open_url() {
 });
 
 add_task(async function test_cross_window_switch_and_private_isolation() {
+  const originalTabs = new Set(gBrowser.tabs);
   const otherWin = await BrowserTestUtils.openNewBrowserWindow();
   await otherWin.gZenWorkspaces.promiseInitialized;
-  const crossWindowEssential = addTab(
+  const crossWindowEssential = await addTab(
     otherWin,
     "cross-window-mail",
     "Cross Window Mail"
@@ -332,16 +355,18 @@ add_task(async function test_cross_window_switch_and_private_isolation() {
   try {
     const rows = await search(window, "cross window mail");
     Assert.equal(rows[0].result.providerName, PROVIDER_NAME);
-    await pickRow(
-      window,
-      rows[0],
+    Assert.ok(
+      ZenUrlbarProviderEssentials.switchToTarget(rows[0].result.payload, false),
+      "The cross-window Essential target is still valid"
+    );
+    await TestUtils.waitForCondition(
       () => otherWin.gBrowser.selectedTab == crossWindowEssential,
       "The Essential's owning window should select it"
     );
 
     privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
     await privateWin.gZenWorkspaces.promiseInitialized;
-    const privateEssential = addTab(
+    const privateEssential = await addTab(
       privateWin,
       "private-only-essential",
       "Private Only Essential"
@@ -356,7 +381,7 @@ add_task(async function test_cross_window_switch_and_private_isolation() {
     );
     await closePopup(window);
 
-    const normalEssential = addEssential(
+    const normalEssential = await addEssential(
       window,
       "normal-only-essential",
       "Normal Only Essential"
@@ -377,11 +402,17 @@ add_task(async function test_cross_window_switch_and_private_isolation() {
       await BrowserTestUtils.closeWindow(privateWin);
     }
     await BrowserTestUtils.closeWindow(otherWin);
+    for (const tab of [...gBrowser.tabs]) {
+      if (!originalTabs.has(tab)) {
+        await removeTab(tab);
+      }
+    }
   }
 });
 
 add_task(async function test_current_essential_is_not_suggested() {
-  const essential = addEssential(
+  const historyUrl = TEST_ROOT + "current-mail-history";
+  const essential = await addEssential(
     window,
     "current-mail-essential",
     "Current Mail Essential"
@@ -389,6 +420,10 @@ add_task(async function test_current_essential_is_not_suggested() {
   gBrowser.selectedTab = essential;
 
   try {
+    await PlacesTestUtils.addVisits({
+      uri: historyUrl,
+      title: "Current mail essential history",
+    });
     const rows = await search(window, "current mail essential");
     Assert.ok(
       !rows.some(({ result }) => result.providerName == PROVIDER_NAME),
@@ -396,6 +431,7 @@ add_task(async function test_current_essential_is_not_suggested() {
     );
   } finally {
     await closePopup(window);
+    await PlacesUtils.history.remove(historyUrl);
     await removeTab(essential);
   }
 });
