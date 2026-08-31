@@ -4,7 +4,7 @@ import path from "node:path";
 import { ZenDevTools } from "zen-devtools-mcp";
 
 export const DEFAULT_PROFILE_PARENT = path.join(os.homedir(), ".zenmod");
-export const DEFAULT_ZEN_PATH = "/Applications/Zen.app/Contents/MacOS/zen";
+export const DEFAULT_ZEN_PATH = "/Applications/Satori.app/Contents/MacOS/zen";
 const BROWSER_DOCUMENT = "chrome://browser/content/browser.xhtml";
 
 function remoteValueToNative(remoteValue) {

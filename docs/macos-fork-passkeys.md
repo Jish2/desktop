@@ -71,7 +71,25 @@ The first command should print `true`. The second should print the exact applica
 
 The bundle identifier, application identifier, certificate Team ID, and provisioning profile must agree.
 
-Set `MOZ_MACBUNDLE_ID` to the unique bundle identifier in the branding configuration used by the build. Release builds currently read:
+Firefox constructs the final bundle identifier as
+`<distribution-id>.<MOZ_MACBUNDLE_ID>`. In this repository, the release-only
+distribution ID and app basename are set in:
+
+```text
+configs/common/mozconfig
+```
+
+The shared `appId` in `surfer.json` remains `zen` so Twilight keeps its
+upstream identity. The release branding override is applied by:
+
+```text
+src/browser/branding/release/configure-sh.patch
+```
+
+For example, use `com.example` as the release distribution ID and `zenfork`
+as the release `MOZ_MACBUNDLE_ID` to produce `com.example.zenfork`.
+
+After branding is generated, release builds read:
 
 ```text
 engine/browser/branding/release/configure.sh
@@ -83,10 +101,10 @@ Twilight builds use:
 engine/browser/branding/twilight/configure.sh
 ```
 
-Update the production entitlement patch:
+Put the release-specific production entitlements in:
 
 ```text
-src/security/mac/hardenedruntime/production/firefox-browser-xml.patch
+configs/macos/entitlements/satori.browser.xml
 ```
 
 Its application identifier must use the fork's Team ID and bundle identifier:
@@ -99,7 +117,8 @@ Its application identifier must use the fork's Team ID and bundle identifier:
 <true/>
 ```
 
-After applying the repository patches, confirm that the generated engine file contains the same values:
+Before signing a Satori release, copy that file over the generated production
+entitlements and confirm that it contains the expected values:
 
 ```text
 engine/security/mac/hardenedruntime/production/firefox.browser.xml
@@ -117,9 +136,13 @@ From the `engine` directory, place the approved profile where the signing comman
 cp "/path/to/ZenFork.provisionprofile" ./embedded.provisionprofile
 ```
 
-Sign with the production entitlement set and an identity installed in the login keychain:
+Install the Satori release entitlements, then sign with the production
+entitlement set and an identity installed in the login keychain:
 
 ```bash
+cp ../configs/macos/entitlements/satori.browser.xml \
+  security/mac/hardenedruntime/production/firefox.browser.xml
+
 ./mach macos-sign \
   -v \
   -c release \
@@ -136,7 +159,13 @@ security find-identity -v -p codesigning
 
 For local development, an approved Apple Development certificate and matching development profile can be used in place of the Developer ID identity. Do not use `-e developer`; that entitlement set intentionally omits restricted passkey access.
 
-The repository's release workflow uses the equivalent `rcodesign` path in `.github/workflows/macos-universal-release-build.yml`. It supplies a `.p12`, password file, provisioning profile, and `-e production`. The same CI structure can be used with the fork's signing assets stored as encrypted secrets.
+The repository's release workflow performs that copy for Satori release builds
+and uses the equivalent `rcodesign` path in
+`.github/workflows/macos-universal-release-build.yml`. Twilight continues to
+use its existing production entitlements. The workflow supplies a `.p12`,
+password file, provisioning profile, and `-e production`. The same CI
+structure can be used with the fork's signing assets stored as encrypted
+secrets.
 
 Sign only after all changes to the app bundle are complete. Changing a binary, resource, framework, helper, or extension under the signed `.app` invalidates the seal. Profile-level browser CSS and settings do not modify the app bundle.
 

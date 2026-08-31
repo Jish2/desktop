@@ -2,6 +2,7 @@
 RELEASE_NOTES_URL="https://raw.githubusercontent.com/zen-browser/www/refs/heads/main/src/release-notes/stable.json"
 
 if [ "$RELEASE_BRANCH" = "release" ]; then
+  PRODUCT_NAME="Satori"
   RELEASE_TYPE="Stable"
 
   echo "Fetching release notes from GitHub..."
@@ -15,11 +16,12 @@ if [ "$RELEASE_BRANCH" = "release" ]; then
   LATEST_RELEASE=$(echo "$RELEASE_NOTES_JSON" | jq -r 'last')
   EXTRA_NOTES=$(echo "$LATEST_RELEASE" | jq -r '.extra // ""')
 else
+  PRODUCT_NAME="Zen"
   RELEASE_TYPE="Twilight"
 fi
 
 {
-  echo "# Zen ${RELEASE_TYPE} Release"
+  echo "# ${PRODUCT_NAME} ${RELEASE_TYPE} Release"
 
   if [ "$RELEASE_TYPE" = "Twilight" ]; then
     echo

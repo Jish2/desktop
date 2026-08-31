@@ -1,5 +1,5 @@
 {
-  "name": "Zen Browser",
+  "name": "Satori Browser",
   "vendor": "Zen OSS Team",
   "appId": "zen",
   "binaryName": "zen",
@@ -16,13 +16,13 @@
   "brands": {
     "release": {
       "backgroundColor": "#282A33",
-      "brandShorterName": "Zen",
-      "brandShortName": "Zen",
-      "brandFullName": "Zen Browser",
+      "brandShorterName": "Satori",
+      "brandShortName": "Satori",
+      "brandFullName": "Satori Browser",
       "release": {
         "displayVersion": "1.21.16b",
         "github": {
-          "repo": "zen-browser/desktop"
+          "repo": "Jish2/desktop"
         },
         "archives": {
           "windows": "windows.mar",
@@ -36,6 +36,7 @@
     },
     "twilight": {
       "backgroundColor": "#282A33",
+      "brandingGenericName": "Zen Browser",
       "brandShorterName": "Zen",
       "brandShortName": "Twilight",
       "brandFullName": "Zen Twilight",
@@ -53,5 +54,5 @@
     ],
     "licenseType": "MPL-2.0"
   },
-  "updateHostname": "updates.zen-browser.app"
+  "updateHostname": ""
 }
