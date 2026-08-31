@@ -154,8 +154,10 @@ jobs:
       - name: Find first .app folder name
         run: |
           cd engine/obj-x86_64-apple-darwin/dist
-          export APP_NAME=${{ inputs.release-branch == 'twilight' && 'Twilight' || 'Zen' }}
+          export APP_NAME=${{ inputs.release-branch == 'twilight' && 'Twilight' || 'Satori' }}
+          export DMG_NAME=${{ inputs.release-branch == 'twilight' && 'zen' || 'satori' }}
           echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "DMG_NAME=$DMG_NAME" >> $GITHUB_ENV
           echo "APP_NAME=$APP_NAME"
 
       - name: List .app folders
@@ -203,6 +205,10 @@ jobs:
       - name: Sign .app
         run: |
           cd engine
+          if [[ "${{ inputs.release-branch }}" == "release" ]]; then
+            cp ../configs/macos/entitlements/satori.browser.xml \
+              security/mac/hardenedruntime/production/firefox.browser.xml
+          fi
           # TODO: Change it to "production" once we figure out the issue with the webauth
           ./mach macos-sign -v -r -c "release" -e "production" -a "./obj-x86_64-apple-darwin/dist/${{ env.APP_NAME }}.app" --rcodesign-p12-file zenCert.p12 --rcodesign-p12-password-file zenpCertPassword.passwd
 
@@ -214,7 +220,7 @@ jobs:
             --background ./browser/branding/${{ inputs.release-branch }}/background.png \
             --icon ./browser/branding/${{ inputs.release-branch }}/firefox.icns \
             --dsstore ./browser/branding/${{ inputs.release-branch }}/dsstore \
-            ./obj-x86_64-apple-darwin/dist/ ../zen-macOS-universal-temp.dmg
+            ./obj-x86_64-apple-darwin/dist/ ../${{ env.DMG_NAME }}-macOS-universal-temp.dmg
 
       - name: Remove sensitive information
         run: |
@@ -223,22 +229,22 @@ jobs:
       - name: Sign .dmg
         run: |
           set -ex
-          hdiutil convert zen-macOS-universal-temp.dmg -format UDZO -imagekey zlib-level=9 -o zen.macos-universal.dmg
-          codesign -s "${{ secrets.macOS_AppleDeveloperId }}" zen.macos-universal.dmg
-          xcrun notarytool submit "zen.macos-universal.dmg" \
+          hdiutil convert "${{ env.DMG_NAME }}-macOS-universal-temp.dmg" -format UDZO -imagekey zlib-level=9 -o "${{ env.DMG_NAME }}.macos-universal.dmg"
+          codesign -s "${{ secrets.macOS_AppleDeveloperId }}" "${{ env.DMG_NAME }}.macos-universal.dmg"
+          xcrun notarytool submit "${{ env.DMG_NAME }}.macos-universal.dmg" \
             --apple-id "${{ secrets.macOS_AppleAccountId }}" \
             --team-id "${{ secrets.macOS_AppleDeveloperIdTeamId }}" \
             --password "${{ secrets.macOS_AppleDeveloperIdPassword }}" \
             --no-s3-acceleration \
             --wait
-          xcrun stapler staple "zen.macos-universal.dmg"
+          xcrun stapler staple "${{ env.DMG_NAME }}.macos-universal.dmg"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           retention-days: 5
-          name: zen.macos-universal.dmg
-          path: ./zen.macos-universal.dmg
+          name: ${{ env.DMG_NAME }}.macos-universal.dmg
+          path: ./${{ env.DMG_NAME }}.macos-universal.dmg
 
       - name: Download platform.ini
         uses: actions/download-artifact@v4
