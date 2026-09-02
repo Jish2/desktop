@@ -57,6 +57,7 @@ class nsZenDuplicateTabsManager extends nsZenDOMOperatedFeature {
     for (const tab of tabs) {
       tab.removeAttribute("zen-duplicate-tab");
       tab.removeAttribute("zen-duplicate-count");
+      this.#getTabIconStack(tab)?.removeAttribute("zen-duplicate-count");
     }
 
     const selectedTab = gBrowser.selectedTab;
@@ -88,9 +89,11 @@ class nsZenDuplicateTabsManager extends nsZenDOMOperatedFeature {
     for (const tab of matchingTabs) {
       tab.setAttribute("zen-duplicate-tab", "true");
     }
-    selectedTab.setAttribute(
+    const duplicateCount = matchingTabs.length.toString();
+    selectedTab.setAttribute("zen-duplicate-count", duplicateCount);
+    this.#getTabIconStack(selectedTab)?.setAttribute(
       "zen-duplicate-count",
-      matchingTabs.length.toString()
+      duplicateCount
     );
   }
 
@@ -108,6 +111,12 @@ class nsZenDuplicateTabsManager extends nsZenDOMOperatedFeature {
       tab.hasAttribute("zen-essential") ||
       !selectedWorkspaceId ||
       tab.getAttribute("zen-workspace-id") === selectedWorkspaceId
+    );
+  }
+
+  #getTabIconStack(tab) {
+    return tab.querySelector(
+      ":scope > .tab-stack > .tab-content > .tab-icon-stack"
     );
   }
 

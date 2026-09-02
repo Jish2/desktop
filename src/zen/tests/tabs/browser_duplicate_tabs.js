@@ -61,6 +61,11 @@ add_task(async function test_duplicate_matching_identity_and_selection() {
     const tabBackground = second.querySelector(".tab-background");
     const iconStack = first.querySelector(".tab-icon-stack");
     is(
+      iconStack.getAttribute("zen-duplicate-count"),
+      "2",
+      "The count is supplied to the badge element"
+    );
+    is(
       getComputedStyle(tabBackground).outlineStyle,
       "solid",
       "Duplicate tabs receive the ring style"
