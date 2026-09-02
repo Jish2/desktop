@@ -98,11 +98,18 @@ This is required before the first release build after an unofficial or developme
 Build with the local macOS settings:
 
 ```sh
-ZEN_RELEASE=1 ZEN_GA_DISABLE_PGO=1 ZEN_DISABLE_LTO=1 npm run build
+ZEN_RELEASE=1 ZEN_GA_DISABLE_PGO=1 ZEN_DISABLE_LTO=1 npm run build -- --jobs 6
 npm run package
 ```
 
-For JavaScript-only changes after the first full build, `npm run build:ui` can be used instead of `npm run build`. Use the full build for native or core changes. Run a full build before browser-chrome tests because the UI build may not produce test-only programs such as `ssltunnel`.
+The six-job cap keeps local builds from saturating the machine. Lower it to four
+if the system is still sluggish. CI builds are not affected.
+
+For JavaScript-only changes after the first full build,
+`npm run build:ui -- --jobs 6` can be used instead of `npm run build`. Use the
+full build for native or core changes. Run a full build before browser-chrome
+tests because the UI build may not produce test-only programs such as
+`ssltunnel`.
 
 #### Choosing a build target
 
