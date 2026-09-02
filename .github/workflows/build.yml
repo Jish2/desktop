@@ -1,4 +1,4 @@
-name: Zen Release builds
+name: Satori and Zen Twilight builds
 
 on:
   workflow_dispatch:
@@ -654,7 +654,7 @@ jobs:
             ./macos.mar/*
             ./.github/workflows/object/windows-x64-signed-x86_64/zen.installer.exe
             ./.github/workflows/object/windows-x64-signed-arm64/zen.installer-arm64.exe
-            ./zen.macos-universal.dmg/*
+            ./satori.macos-universal.dmg/*
 
       - name: Clean up signed windows staging release
         if: ${{ inputs.update_branch == 'release' }}

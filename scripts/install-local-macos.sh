@@ -21,8 +21,13 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
-app="/Applications/Zen.app"
-resources="$app/Contents/Resources"
+app="/Applications/Satori.app"
+legacy_app="/Applications/Zen.app"
+installed_app="$app"
+if [[ ! -d "$installed_app" && -d "$legacy_app" ]]; then
+  installed_app="$legacy_app"
+fi
+resources="$installed_app/Contents/Resources"
 profile_root="$HOME/Library/Application Support/zen"
 profiles_dir="$profile_root/Profiles"
 sine_config="$resources/config.js"
@@ -46,32 +51,32 @@ fi
 
 if [[ -e "$sine_config" || -e "$sine_prefs" ]]; then
   if [[ ! -f "$sine_config" || ! -f "$sine_prefs" ]]; then
-    echo "The installed Zen app contains an incomplete Sine bootloader." >&2
+    echo "The installed Satori app contains an incomplete Sine bootloader." >&2
     echo "Restore both config.js and defaults/pref/config-prefs.js before installing." >&2
     exit 1
   fi
 elif $sine_profile_present; then
-  echo "Sine is installed in a Zen profile, but its app bootloader is missing." >&2
-  echo "Restore the Sine bootloader before replacing Zen." >&2
+  echo "Sine is installed in a Satori profile, but its app bootloader is missing." >&2
+  echo "Restore the Sine bootloader before replacing Satori." >&2
   exit 1
 fi
 
 if $check_only; then
-  echo "Local Zen package is ready to install."
+  echo "Local Satori package is ready to install."
   if $sine_profile_present; then
     echo "Sine profile and bootloader detected; both loader files will be preserved."
   fi
   exit 0
 fi
 
-if pgrep -f '^/Applications/Zen\.app/Contents/MacOS/zen$' >/dev/null; then
-  echo "Zen is still running; quit it before installing." >&2
+if pgrep -f '^/Applications/(Satori|Zen)\.app/Contents/MacOS/zen$' >/dev/null; then
+  echo "Satori is still running; quit it before installing." >&2
   exit 1
 fi
 
 timestamp="$(date +%Y-%m-%d-%H%M%S)"
-profile_backup="$HOME/Desktop/zen-backup-$timestamp"
-previous="$app.backup"
+profile_backup="$HOME/Desktop/satori-backup-$timestamp"
+previous="$installed_app.backup"
 staged="$app.new"
 mount_dir="$(mktemp -d /tmp/zen-dmg.XXXXXX)"
 mounted=false
@@ -89,12 +94,12 @@ test ! -e "$staged"
 
 hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "$dmg" >/dev/null
 mounted=true
-test -d "$mount_dir/Zen.app"
+test -d "$mount_dir/Satori.app"
 unzip -p \
-  "$mount_dir/Zen.app/Contents/Resources/browser/omni.ja" \
+  "$mount_dir/Satori.app/Contents/Resources/browser/omni.ja" \
   "localization/en-US/browser/preferences/zen-preferences.ftl" \
   >/dev/null
-ditto "$mount_dir/Zen.app" "$staged"
+ditto "$mount_dir/Satori.app" "$staged"
 
 if [[ -f "$sine_config" ]]; then
   mkdir -p "$staged/Contents/Resources/defaults/pref"
@@ -118,13 +123,13 @@ fi
 test -d "$profile_root"
 ditto "$profile_root" "$profile_backup"
 
-if [[ -e "$app" ]]; then
+if [[ -e "$installed_app" ]]; then
   rm -rf "$previous"
-  mv "$app" "$previous"
+  mv "$installed_app" "$previous"
 fi
 if ! mv "$staged" "$app"; then
-  if [[ -e "$previous" && ! -e "$app" ]]; then
-    mv "$previous" "$app"
+  if [[ -e "$previous" && ! -e "$installed_app" ]]; then
+    mv "$previous" "$installed_app"
   fi
   exit 1
 fi
