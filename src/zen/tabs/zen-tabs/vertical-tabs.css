@@ -907,35 +907,26 @@
       var(--tab-box-shadow-selected, none) !important;
   }
 
-  &
-    .tabbrowser-tab[zen-duplicate-count]
-    > .tab-stack
-    > .tab-content
-    > .tab-icon-stack {
-    overflow: visible;
-    position: relative;
-
-    &::after {
-      align-items: center;
-      background: var(--zen-duplicate-tab-color);
-      border: 1px solid light-dark(white, black);
-      border-radius: 999px;
-      color: light-dark(white, black);
-      content: attr(zen-duplicate-count);
-      display: flex;
-      font-size: 8px;
-      font-weight: 700;
-      height: 12px;
-      inset-block-start: -5px;
-      inset-inline-end: -7px;
-      justify-content: center;
-      line-height: 1;
-      min-width: 12px;
-      padding-inline: 2px;
-      pointer-events: none;
-      position: absolute;
-      z-index: 2;
-    }
+  & .tabbrowser-tab[zen-duplicate-count]::after {
+    align-items: center;
+    background: var(--zen-duplicate-tab-color);
+    border: 1px solid light-dark(white, black);
+    border-radius: 999px;
+    color: light-dark(white, black);
+    content: attr(zen-duplicate-count);
+    display: flex;
+    font-size: 8px;
+    font-weight: 700;
+    height: 12px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 12px;
+    padding-inline: 2px;
+    pointer-events: none;
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    z-index: 2;
   }
 
   & .tabbrowser-tab {

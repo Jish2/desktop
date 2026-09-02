@@ -59,22 +59,20 @@ add_task(async function test_duplicate_matching_identity_and_selection() {
     );
 
     const tabBackground = second.querySelector(".tab-background");
-    const iconStack = first.querySelector(".tab-icon-stack");
-    is(
-      iconStack.getAttribute("zen-duplicate-count"),
-      "2",
-      "The count is supplied to the badge element"
-    );
+    const badgeStyle = getComputedStyle(first, "::after");
     is(
       getComputedStyle(tabBackground).outlineStyle,
       "solid",
       "Duplicate tabs receive the ring style"
     );
     is(
-      getComputedStyle(iconStack, "::after").content,
+      badgeStyle.content,
       "attr(zen-duplicate-count)",
       "The active tab renders its matching-tab count attribute"
     );
+    is(badgeStyle.position, "absolute", "The count badge is positioned");
+    is(badgeStyle.right, "-2px", "The count badge is anchored to tab right");
+    is(badgeStyle.top, "-2px", "The count badge is anchored to tab top");
 
     await BrowserTestUtils.switchTab(gBrowser, differentQuery);
     await waitForNoDuplicateState(tabs);
