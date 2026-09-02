@@ -13,6 +13,8 @@ tags = [
   "vertical-tabs"
 ]
 
+["browser_duplicate_tabs.js"]
+
 ["browser_tab_history.js"]
 
 ["browser_tabs_close_recently.js"]
