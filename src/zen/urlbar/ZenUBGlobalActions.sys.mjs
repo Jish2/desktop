@@ -172,7 +172,6 @@ const globalActionsTemplate = [
     l10nId: "zen-action-tab-history-back",
     command: "cmd_zenTabHistoryBack",
     icon: "chrome://browser/skin/zen-icons/back.svg",
-    isAvailable: window => window.gZenTabHistory.canGoBack(window),
   },
   {
     l10nId: "zen-action-tab-history-forward",
