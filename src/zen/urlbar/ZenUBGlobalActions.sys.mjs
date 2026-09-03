@@ -268,6 +268,14 @@ const globalActionsTemplate = [
       return isNotEmptyTab(window);
     },
   },
+  {
+    l10nId: "zen-action-pause-media",
+    command: "cmd_zenMediaPause",
+    icon: "chrome://browser/skin/zen-icons/media-pause.svg",
+    isAvailable: window => {
+      return window.gZenMediaController.hasPlayingMedia;
+    },
+  },
 ];
 
 export const globalActions = globalActionsTemplate.map(action => ({

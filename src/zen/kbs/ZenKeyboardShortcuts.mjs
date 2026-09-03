@@ -894,7 +894,7 @@ class nsZenKeyboardShortcutsLoader {
 }
 
 class nsZenKeyboardShortcutsVersioner {
-  static LATEST_KBS_VERSION = 21;
+  static LATEST_KBS_VERSION = 22;
 
   constructor() {}
 
@@ -1341,6 +1341,22 @@ class nsZenKeyboardShortcutsVersioner {
           nsKeyShortcutModifiers.fromObject({}),
           "cmd_zenTabHistoryForward",
           "zen-tab-history-forward-shortcut"
+        )
+      );
+    }
+
+    if (version < 22) {
+      // Migrate from version 21 to 22.
+      // Add an unbound shortcut for pausing media playing in any tab.
+      data.push(
+        new KeyShortcut(
+          "zen-media-pause",
+          "",
+          "",
+          "mediaAndDisplay",
+          nsKeyShortcutModifiers.fromObject({}),
+          "cmd_zenMediaPause",
+          "zen-media-pause-shortcut"
         )
       );
     }

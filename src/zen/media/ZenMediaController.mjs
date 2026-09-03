@@ -541,6 +541,24 @@ class nsZenMediaController {
     return this.#orderedCards.find(card => !card.element.hidden) ?? null;
   }
 
+  // Media controllers that are actively playing anywhere in this window,
+  // across every tab — regardless of whether the cards UI is enabled.
+  get #playingControllers() {
+    return gBrowser.browsers
+      .map(browser => browser.browsingContext?.mediaController)
+      .filter(controller => controller?.isActive && controller.isPlaying);
+  }
+
+  get hasPlayingMedia() {
+    return Boolean(this.#playingControllers.length);
+  }
+
+  pausePlayingMedia() {
+    for (const controller of this.#playingControllers) {
+      controller.pause("user");
+    }
+  }
+
   get #orderedCards() {
     // Newest media sits at the front of the stack.
     return Array.from(this.#cards.values()).reverse();
