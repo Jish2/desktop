@@ -136,6 +136,9 @@ document.addEventListener(
           case "cmd_zenCloseUnpinnedTabs":
             gZenWorkspaces.closeAllUnpinnedTabs();
             break;
+          case "cmd_zenMediaPause":
+            gZenMediaController.pausePlayingMedia();
+            break;
           case "cmd_zenUnloadWorkspace": {
             gZenWorkspaces.unloadWorkspace();
             break;

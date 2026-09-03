@@ -367,4 +367,5 @@ zen-new-unsynced-window-shortcut = New Blank Window
 zen-duplicate-tab-shortcut = Duplicate Tab
 zen-tab-history-back-shortcut = Go Back in Tab History
 zen-tab-history-forward-shortcut = Go Forward in Tab History
+zen-media-pause-shortcut = Pause Media
 zen-key-find-selection = Find Selection
