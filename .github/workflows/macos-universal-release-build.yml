@@ -11,6 +11,11 @@ on:
         description: "The branch to build"
         required: true
         type: string
+      enable-passkey-entitlement:
+        description: "Use Satori's approved passkey entitlement and profile"
+        required: false
+        default: false
+        type: boolean
   workflow_call:
     inputs:
       build-version:
@@ -21,6 +26,11 @@ on:
         description: "The branch to build"
         required: true
         type: string
+      enable-passkey-entitlement:
+        description: "Use Satori's approved passkey entitlement and profile"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   mac-build:
@@ -180,6 +190,7 @@ jobs:
           rm engine/cert.txt || true
 
       - name: Import provisioning profile for .app
+        if: ${{ inputs.release-branch != 'release' || inputs.enable-passkey-entitlement }}
         run: |
           echo "${{ secrets.macOS_PROVISIONING_PROFILE }}" | base64 --decode > ./engine/Zen_Browser.provisionprofile
           ls -la
@@ -197,6 +208,7 @@ jobs:
           p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
 
       - name: Copy provisioning profile for .app (embedded in .app)
+        if: ${{ inputs.release-branch != 'release' || inputs.enable-passkey-entitlement }}
         run: |
           cd engine
           echo "Copying provisioning profile for .app on both architectures (${{ env.APP_NAME }})"
@@ -205,12 +217,80 @@ jobs:
       - name: Sign .app
         run: |
           cd engine
+          ENTITLEMENTS="production"
           if [[ "${{ inputs.release-branch }}" == "release" ]]; then
             cp ../configs/macos/entitlements/satori.browser.xml \
               security/mac/hardenedruntime/production/firefox.browser.xml
+            if [[ "${{ inputs.enable-passkey-entitlement }}" != "true" ]]; then
+              ENTITLEMENTS="production-without-restricted"
+            fi
           fi
-          # TODO: Change it to "production" once we figure out the issue with the webauth
-          ./mach macos-sign -v -r -c "release" -e "production" -a "./obj-x86_64-apple-darwin/dist/${{ env.APP_NAME }}.app" --rcodesign-p12-file zenCert.p12 --rcodesign-p12-password-file zenpCertPassword.passwd
+          ./mach macos-sign -v -r -c "release" -e "$ENTITLEMENTS" -a "./obj-x86_64-apple-darwin/dist/${{ env.APP_NAME }}.app" --rcodesign-p12-file zenCert.p12 --rcodesign-p12-password-file zenpCertPassword.passwd
+
+      - name: Verify signed browser identity and entitlements
+        if: ${{ inputs.release-branch == 'release' }}
+        env:
+          EXPECT_PASSKEY_ENTITLEMENT: ${{ inputs.enable-passkey-entitlement }}
+        run: |
+          APP="./engine/obj-x86_64-apple-darwin/dist/${{ env.APP_NAME }}.app"
+          ENTITLEMENTS="$(mktemp)"
+
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -d --entitlements :- "$APP" > "$ENTITLEMENTS" 2>/dev/null
+
+          APP="$APP" ENTITLEMENTS="$ENTITLEMENTS" python3 <<'PY'
+          import os
+          import plistlib
+
+          app = os.environ["APP"]
+          with open(os.path.join(app, "Contents", "Info.plist"), "rb") as fh:
+              info = plistlib.load(fh)
+          with open(os.environ["ENTITLEMENTS"], "rb") as fh:
+              entitlements = plistlib.load(fh)
+
+          expected_bundle_id = "com.jgoon.satori"
+          actual_bundle_id = info.get("CFBundleIdentifier")
+          if actual_bundle_id != expected_bundle_id:
+              raise SystemExit(
+                  f"Expected bundle ID {expected_bundle_id}, got {actual_bundle_id}"
+              )
+
+          schemes = {
+              scheme
+              for url_type in info.get("CFBundleURLTypes", [])
+              for scheme in url_type.get("CFBundleURLSchemes", [])
+          }
+          missing_schemes = {"http", "https"} - schemes
+          if missing_schemes:
+              raise SystemExit(
+                  f"Browser is missing URL schemes: {sorted(missing_schemes)}"
+              )
+
+          passkey_key = (
+              "com.apple.developer.web-browser.public-key-credential"
+          )
+          app_id_key = "com.apple.application-identifier"
+          expect_passkeys = os.environ["EXPECT_PASSKEY_ENTITLEMENT"] == "true"
+
+          if expect_passkeys:
+              expected_app_id = "4NNR2DBK2F.com.jgoon.satori"
+              if entitlements.get(passkey_key) is not True:
+                  raise SystemExit("Approved passkey entitlement is missing")
+              if entitlements.get(app_id_key) != expected_app_id:
+                  raise SystemExit(
+                      f"Expected application identifier {expected_app_id}, "
+                      f"got {entitlements.get(app_id_key)}"
+                  )
+          elif passkey_key in entitlements or app_id_key in entitlements:
+              raise SystemExit(
+                  "Restricted entitlements must not be present before approval"
+              )
+
+          print(
+              f"Verified {actual_bundle_id}; passkey entitlement "
+              f"{'enabled' if expect_passkeys else 'omitted for Apple review'}"
+          )
+          PY
 
       - name: Create DMG
         run: |

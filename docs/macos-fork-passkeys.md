@@ -36,6 +36,56 @@ It is a managed capability. Holding a paid Apple Developer membership does not g
 
 Apple requires the app to behave as a general web browser. Its `Info.plist` must register the HTTP and HTTPS schemes, and the app must navigate directly to requested web content. See Apple's [entitlement documentation](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential).
 
+## Provide a browser build for Apple's review
+
+Apple may pause the request and ask for a download so it can verify that the
+app meets the browser criteria. This is not a denial. Publish a build with the
+same bundle identifier named in the entitlement request.
+
+A review build cannot use the restricted passkey entitlement before Apple
+approves it. Sign the browser with a Developer ID Application certificate and
+the production entitlements with restricted values removed:
+
+```bash
+cp ../configs/macos/entitlements/satori.browser.xml \
+  security/mac/hardenedruntime/production/firefox.browser.xml
+
+./mach macos-sign \
+  -v \
+  -c release \
+  -e production-without-restricted \
+  -a "/absolute/path/to/Satori.app" \
+  -s "Developer ID Application: Your Name (ABCDE12345)"
+```
+
+Do not embed a passkey provisioning profile in this build. The
+`production-without-restricted` mode removes both
+`com.apple.developer.web-browser.public-key-credential` and
+`com.apple.application-identifier` while retaining the normal hardened-runtime
+browser entitlements.
+
+Notarize the DMG when possible so Apple's reviewer can open it without
+bypassing Gatekeeper. Upload it somewhere that can be downloaded without
+signing in, such as a public GitHub release, and verify the direct asset URL in
+a private browser window.
+
+The release workflow uses this review-safe mode by default. Only set its
+`enable_passkey_entitlement` input after Apple approves the request and the
+matching provisioning profile is available.
+
+Suggested resubmission text:
+
+```text
+A downloadable macOS build is available at:
+<DIRECT_DMG_URL>
+
+The browser does not require an account or test credentials. After
+installation, launch Satori and enter any HTTP or HTTPS URL in the address bar.
+The browser navigates directly to and renders the requested web content.
+
+Bundle identifier: com.jgoon.satori
+```
+
 ## Create the signing assets
 
 After approval, regenerate the provisioning profile. A profile created before approval will not contain the new entitlement.
@@ -188,9 +238,13 @@ Confirm all of the following:
 - `Signature` is not `adhoc`.
 - `TeamIdentifier` is the fork's Team ID.
 - `CFBundleIdentifier` is the fork's bundle identifier.
-- `com.apple.application-identifier` is `<TEAM_ID>.<BUNDLE_ID>`.
-- `com.apple.developer.web-browser.public-key-credential` is `true`.
-- The embedded profile contains the same application identifier and passkey entitlement.
+- Before approval, neither `com.apple.application-identifier` nor
+  `com.apple.developer.web-browser.public-key-credential` is present.
+- After approval, `com.apple.application-identifier` is
+  `<TEAM_ID>.<BUNDLE_ID>` and
+  `com.apple.developer.web-browser.public-key-credential` is `true`.
+- After approval, the embedded profile contains the same application
+  identifier and passkey entitlement.
 
 Open `about:config` in the signed browser and confirm that `security.webauthn.enable_macos_passkeys` is `true`. Test registration and authentication on a WebAuthn test site before testing a site-specific login.
 
