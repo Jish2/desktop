@@ -24,7 +24,7 @@ Check the local environment:
 npm run zenmod -- doctor
 ```
 
-Zen must be installed at `/Applications/Zen.app/Contents/MacOS/zen`, or supplied
+Satori must be installed at `/Applications/Satori.app/Contents/MacOS/zen`, or supplied
 with `--zen-path` or `ZEN_PATH`.
 
 ## Commands

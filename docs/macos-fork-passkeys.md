@@ -36,6 +36,56 @@ It is a managed capability. Holding a paid Apple Developer membership does not g
 
 Apple requires the app to behave as a general web browser. Its `Info.plist` must register the HTTP and HTTPS schemes, and the app must navigate directly to requested web content. See Apple's [entitlement documentation](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.web-browser.public-key-credential).
 
+## Provide a browser build for Apple's review
+
+Apple may pause the request and ask for a download so it can verify that the
+app meets the browser criteria. This is not a denial. Publish a build with the
+same bundle identifier named in the entitlement request.
+
+A review build cannot use the restricted passkey entitlement before Apple
+approves it. Sign the browser with a Developer ID Application certificate and
+the production entitlements with restricted values removed:
+
+```bash
+cp ../configs/macos/entitlements/satori.browser.xml \
+  security/mac/hardenedruntime/production/firefox.browser.xml
+
+./mach macos-sign \
+  -v \
+  -c release \
+  -e production-without-restricted \
+  -a "/absolute/path/to/Satori.app" \
+  -s "Developer ID Application: Your Name (ABCDE12345)"
+```
+
+Do not embed a passkey provisioning profile in this build. The
+`production-without-restricted` mode removes both
+`com.apple.developer.web-browser.public-key-credential` and
+`com.apple.application-identifier` while retaining the normal hardened-runtime
+browser entitlements.
+
+Notarize the DMG when possible so Apple's reviewer can open it without
+bypassing Gatekeeper. Upload it somewhere that can be downloaded without
+signing in, such as a public GitHub release, and verify the direct asset URL in
+a private browser window.
+
+The release workflow uses this review-safe mode by default. Only set its
+`enable_passkey_entitlement` input after Apple approves the request and the
+matching provisioning profile is available.
+
+Suggested resubmission text:
+
+```text
+A downloadable macOS build is available at:
+<DIRECT_DMG_URL>
+
+The browser does not require an account or test credentials. After
+installation, launch Satori and enter any HTTP or HTTPS URL in the address bar.
+The browser navigates directly to and renders the requested web content.
+
+Bundle identifier: com.jgoon.satori
+```
+
 ## Create the signing assets
 
 After approval, regenerate the provisioning profile. A profile created before approval will not contain the new entitlement.
@@ -71,7 +121,25 @@ The first command should print `true`. The second should print the exact applica
 
 The bundle identifier, application identifier, certificate Team ID, and provisioning profile must agree.
 
-Set `MOZ_MACBUNDLE_ID` to the unique bundle identifier in the branding configuration used by the build. Release builds currently read:
+Firefox constructs the final bundle identifier as
+`<distribution-id>.<MOZ_MACBUNDLE_ID>`. In this repository, the release-only
+distribution ID and app basename are set in:
+
+```text
+configs/common/mozconfig
+```
+
+The shared `appId` in `surfer.json` remains `zen` so Twilight keeps its
+upstream identity. The release branding override is applied by:
+
+```text
+src/browser/branding/release/configure-sh.patch
+```
+
+For example, use `com.example` as the release distribution ID and `zenfork`
+as the release `MOZ_MACBUNDLE_ID` to produce `com.example.zenfork`.
+
+After branding is generated, release builds read:
 
 ```text
 engine/browser/branding/release/configure.sh
@@ -83,10 +151,10 @@ Twilight builds use:
 engine/browser/branding/twilight/configure.sh
 ```
 
-Update the production entitlement patch:
+Put the release-specific production entitlements in:
 
 ```text
-src/security/mac/hardenedruntime/production/firefox-browser-xml.patch
+configs/macos/entitlements/satori.browser.xml
 ```
 
 Its application identifier must use the fork's Team ID and bundle identifier:
@@ -99,7 +167,8 @@ Its application identifier must use the fork's Team ID and bundle identifier:
 <true/>
 ```
 
-After applying the repository patches, confirm that the generated engine file contains the same values:
+Before signing a Satori release, copy that file over the generated production
+entitlements and confirm that it contains the expected values:
 
 ```text
 engine/security/mac/hardenedruntime/production/firefox.browser.xml
@@ -117,9 +186,13 @@ From the `engine` directory, place the approved profile where the signing comman
 cp "/path/to/ZenFork.provisionprofile" ./embedded.provisionprofile
 ```
 
-Sign with the production entitlement set and an identity installed in the login keychain:
+Install the Satori release entitlements, then sign with the production
+entitlement set and an identity installed in the login keychain:
 
 ```bash
+cp ../configs/macos/entitlements/satori.browser.xml \
+  security/mac/hardenedruntime/production/firefox.browser.xml
+
 ./mach macos-sign \
   -v \
   -c release \
@@ -136,9 +209,28 @@ security find-identity -v -p codesigning
 
 For local development, an approved Apple Development certificate and matching development profile can be used in place of the Developer ID identity. Do not use `-e developer`; that entitlement set intentionally omits restricted passkey access.
 
-The repository's release workflow uses the equivalent `rcodesign` path in `.github/workflows/macos-universal-release-build.yml`. It supplies a `.p12`, password file, provisioning profile, and `-e production`. The same CI structure can be used with the fork's signing assets stored as encrypted secrets.
+The repository's release workflow performs that copy for Satori release builds
+and uses the equivalent `rcodesign` path in
+`.github/workflows/macos-universal-release-build.yml`. Twilight continues to
+use its existing production entitlements. The workflow supplies a `.p12`,
+password file, provisioning profile, and `-e production`. The same CI
+structure can be used with the fork's signing assets stored as encrypted
+secrets.
 
 Sign only after all changes to the app bundle are complete. Changing a binary, resource, framework, helper, or extension under the signed `.app` invalidates the seal. Profile-level browser CSS and settings do not modify the app bundle.
+
+### Injecting fork-specific bundle files
+
+Satori's release build copies `configs/macos/app-bundle-files/` into the packaged app's `Contents/Resources/` before signing:
+
+- `distribution/policies.json` — disables application updates (`DisableAppUpdate`). The fork has no update infrastructure; without this policy the browser advertises upstream Zen updates, and installing one would replace the app and discard the fork's identity, signature, and passkey entitlement.
+- `config.js` and `defaults/pref/config-prefs.js` — the fx-autoconfig bootstrap that loads [Sine](https://github.com/CosmoCreeper/Sine) mods from the profile's `chrome` directory. Vendored from the Sine installer; only needed because Sine is in use.
+
+The release workflow performs the copy immediately before the sign step. When signing locally, mirror the same directory into the packaged app first:
+
+```bash
+cp -R ../configs/macos/app-bundle-files/ "/absolute/path/to/Satori.app/Contents/Resources/"
+```
 
 ## Verify the signed app
 
@@ -159,9 +251,13 @@ Confirm all of the following:
 - `Signature` is not `adhoc`.
 - `TeamIdentifier` is the fork's Team ID.
 - `CFBundleIdentifier` is the fork's bundle identifier.
-- `com.apple.application-identifier` is `<TEAM_ID>.<BUNDLE_ID>`.
-- `com.apple.developer.web-browser.public-key-credential` is `true`.
-- The embedded profile contains the same application identifier and passkey entitlement.
+- Before approval, neither `com.apple.application-identifier` nor
+  `com.apple.developer.web-browser.public-key-credential` is present.
+- After approval, `com.apple.application-identifier` is
+  `<TEAM_ID>.<BUNDLE_ID>` and
+  `com.apple.developer.web-browser.public-key-credential` is `true`.
+- After approval, the embedded profile contains the same application
+  identifier and passkey entitlement.
 
 Open `about:config` in the signed browser and confirm that `security.webauthn.enable_macos_passkeys` is `true`. Test registration and authentication on a WebAuthn test site before testing a site-specific login.
 

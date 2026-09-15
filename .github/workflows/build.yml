@@ -1,4 +1,4 @@
-name: Zen Release builds
+name: Satori and Zen Twilight builds
 
 on:
   workflow_dispatch:
@@ -26,6 +26,11 @@ on:
         required: true
         type: "boolean"
         default: false
+      enable_passkey_entitlement:
+        description: "Use Satori's approved macOS passkey entitlement"
+        required: false
+        type: "boolean"
+        default: false
   workflow_call:
     inputs:
       create_release:
@@ -46,6 +51,11 @@ on:
       use-sccache:
         description: "Use sccache"
         required: true
+        type: "boolean"
+        default: false
+      enable_passkey_entitlement:
+        description: "Use Satori's approved macOS passkey entitlement"
+        required: false
         type: "boolean"
         default: false
 
@@ -380,6 +390,7 @@ jobs:
     with:
       build-version: ${{ needs.build-data.outputs.version }}
       release-branch: ${{ inputs.update_branch }}
+      enable-passkey-entitlement: ${{ inputs.enable_passkey_entitlement }}
 
   appimage:
     name: AppImage build - Linux ${{ matrix.arch }}
@@ -654,7 +665,7 @@ jobs:
             ./macos.mar/*
             ./.github/workflows/object/windows-x64-signed-x86_64/zen.installer.exe
             ./.github/workflows/object/windows-x64-signed-arm64/zen.installer-arm64.exe
-            ./zen.macos-universal.dmg/*
+            ./satori.macos-universal.dmg/*
 
       - name: Clean up signed windows staging release
         if: ${{ inputs.update_branch == 'release' }}
