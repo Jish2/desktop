@@ -219,6 +219,19 @@ secrets.
 
 Sign only after all changes to the app bundle are complete. Changing a binary, resource, framework, helper, or extension under the signed `.app` invalidates the seal. Profile-level browser CSS and settings do not modify the app bundle.
 
+### Injecting fork-specific bundle files
+
+Satori's release build copies `configs/macos/app-bundle-files/` into the packaged app's `Contents/Resources/` before signing:
+
+- `distribution/policies.json` — disables application updates (`DisableAppUpdate`). The fork has no update infrastructure; without this policy the browser advertises upstream Zen updates, and installing one would replace the app and discard the fork's identity, signature, and passkey entitlement.
+- `config.js` and `defaults/pref/config-prefs.js` — the fx-autoconfig bootstrap that loads [Sine](https://github.com/CosmoCreeper/Sine) mods from the profile's `chrome` directory. Vendored from the Sine installer; only needed because Sine is in use.
+
+The release workflow performs the copy immediately before the sign step. When signing locally, mirror the same directory into the packaged app first:
+
+```bash
+cp -R ../configs/macos/app-bundle-files/ "/absolute/path/to/Satori.app/Contents/Resources/"
+```
+
 ## Verify the signed app
 
 Run these checks against the final app:
