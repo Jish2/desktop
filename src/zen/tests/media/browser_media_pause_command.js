@@ -20,7 +20,7 @@ add_task(async function test_pause_media_command() {
 
     document.getElementById("cmd_zenMediaPause").doCommand();
 
-    await BrowserTestUtils.waitForCondition(
+    await TestUtils.waitForCondition(
       () => !mediaTab.soundPlaying,
       "tab stops playing sound after cmd_zenMediaPause"
     );
