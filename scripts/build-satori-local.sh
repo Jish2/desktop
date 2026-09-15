@@ -95,8 +95,10 @@ import() {
   warn "surfer import failed — verifying tree state by probes instead"
   grep -q 'MOZ_MACBUNDLE_ID="satori"' "$ENGINE/browser/branding/release/configure.sh" \
     || die "configure.sh identity still unpatched; engine needs fresh 'npm run init'"
-  (cd "$ENGINE" && git apply --check -R "../src/tools/signing/macos/mach_commands-py.patch") \
-    || die "mach_commands signing patch not in final state"
+  rg -q "os\.rename\(originProfile, endProfile\)" "$ENGINE/tools/signing/macos/mach_commands.py" \
+    || die "mach_commands profile-move hunk missing"
+  rg -q '"--for-notarization"' "$ENGINE/tools/signing/macos/mach_commands.py" \
+    || die "mach_commands --for-notarization hunk missing"
   [[ "$(shasum -a 256 "$ENGINE/browser/branding/release/logo512.png" | cut -d' ' -f1)" == "$ART_HASH" ]] \
     || die "engine branding art stale after import attempt"
   log "probes pass — tree is in the intended patched state; proceeding"
@@ -117,14 +119,13 @@ PACKAGED_APP="$WORK/staging/Satori.app"
 extract() {
   log "extract packaged app"
   rm -rf "$WORK/staging" && mkdir -p "$WORK/staging"
-  local zip
-  zip=$(ls -t "$OBJ"/dist/*.en-US.mac.zip 2>/dev/null | head -1 || true)
+  local zip dmg
+  zip=$(find "$OBJ/dist" -maxdepth 1 -name "*.en-US.mac.zip" 2>/dev/null | head -1)
   if [[ -n "${zip:-}" ]]; then
     unzip -q "$zip" -d "$WORK/staging"
   else
-    local dmg
-    dmg=$(ls -t "$OBJ"/dist/*.en-US.mac.dmg 2>/dev/null | head -1 || true)
-    [[ -n "${dmg:-}" ]] || die "no packaged zip/dmg in $OBJ/dist — did 'mach package' run?"
+    dmg=$(find "$OBJ/dist" -maxdepth 1 -name "*.en-US.mac.dmg" -mmin -180 2>/dev/null | head -1)
+    [[ -n "${dmg:-}" ]] || die "no recent packaged zip/dmg in $OBJ/dist — run phase 'package' first (or it silently failed)"
     warn "no zip; extracting from $dmg"
     local mp="$WORK/dmg-mount"; mkdir -p "$mp"
     hdiutil attach -nobrowse -readonly -mountpoint "$mp" "$dmg"
@@ -133,10 +134,29 @@ extract() {
   fi
   [[ -x "$PACKAGED_APP/Contents/MacOS/zen" ]] || die "extracted bundle malformed"
   local n; n=$(find "$PACKAGED_APP" -type l | wc -l | tr -d ' ')
-  [[ "$n" == "0" ]] || warn "$n symlinks remain (packaged app should be link-free) — will dereference"
-  mv "$PACKAGED_APP" "$PACKAGED_APP.tmp" && cp -RL "$PACKAGED_APP.tmp" "$WORK/staging/" && rm -rf "$PACKAGED_APP.tmp" || true
+  if [[ "$n" != "0" ]]; then
+    warn "$n symlinks remain — dereferencing all to real files"
+    mv "$PACKAGED_APP" "$WORK/staging/Satori.symlinked.tmp"
+    mkdir -p "$WORK/staging/Satori.app"
+    (cd "$WORK/staging/Satori.symlinked.tmp" && tar -chf - .) | (cd "$WORK/staging/Satori.app" && tar -xf -)
+    rm -rf "$WORK/staging/Satori.symlinked.tmp"
+  fi
   [[ "$(defaults read "$WORK/staging/Satori.app/Contents/Info" CFBundleIdentifier)" == "$BUNDLE_ID_PLAIN" ]] \
     || die "wrong bundle id in packaged app"
+
+  # Purge stale prior-generation helper binaries. Warm obj dirs ship BOTH
+  # 'Zen X Helper' (stale, unsigned) and 'Satori X Helper' inside nested
+  # helper bundles; codesign --deep refuses to seal mixed bundles.
+  # Scoped to NESTED .app bundles only — the root bundle keeps everything.
+  find "$PACKAGED_APP/Contents" -mindepth 2 -name "*.app" -type d | while IFS= read -r a; do
+    exe=$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$a/Contents/Info.plist" 2>/dev/null || true)
+    [[ -n "$exe" && -d "$a/Contents/MacOS" ]] || continue
+    find "$a/Contents/MacOS" -maxdepth 1 -name "Zen*" -type f | while IFS= read -r stray; do
+      [[ "$(basename "$stray")" != "$exe" ]] || continue
+      warn "purging stale binary: $(basename "$stray") (inside $(basename "$a"))"
+      rm "$stray"
+    done
+  done
   log "packaged app ready: $(du -sh "$PACKAGED_APP" | cut -f1)"
 }
 
@@ -228,6 +248,7 @@ ship() {
 # ── driver ──
 start="${1:-preflight}"
 have_phase "$start" || die "unknown start phase '$start' (one of: ${PHASES[*]})"
+if [[ "$start" == "preflight" ]]; then preflight; exit 0; fi  # preflight alone = check-only
 go=0
 for p in "${PHASES[@]}"; do
   [[ "$p" == "$start" ]] && go=1
