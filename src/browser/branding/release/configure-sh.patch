@@ -1,7 +1,9 @@
 diff --git a/browser/branding/release/configure.sh b/browser/branding/release/configure.sh
 --- a/browser/branding/release/configure.sh
 +++ b/browser/branding/release/configure.sh
-@@ -5,2 +5,2 @@
+@@ -5,4 +5,4 @@
  MOZ_APP_DISPLAYNAME="Satori"
 -MOZ_MACBUNDLE_ID="zen"
 +MOZ_MACBUNDLE_ID="satori"
+ 
+ # if test "$DEVELOPER_OPTIONS"; then
