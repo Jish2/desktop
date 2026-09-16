@@ -32,7 +32,9 @@ NOTARY_PROFILE="${NOTARY_PROFILE:-satori-notary}"
 PROFILE_PATH="${PROFILE_PATH:-$HOME/Downloads/Satori_Developer_ID.provisionprofile}"
 BUNDLE_ID_PLAIN="com.jgoon.satori"
 TEAM_ID="4NNR2DBK2F"
-ART_HASH=""  # filled in preflight
+# Branding-art probe hash. Computed at load (not inside preflight) so phase-targeted
+# runs (e.g. starting at 'import') have it: the preflight/import probes depend on it.
+ART_HASH=$(shasum -a 256 "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/configs/branding/release/logo512.png" | cut -d' ' -f1)
 
 export ZEN_RELEASE=1 ZEN_RELEASE_BRANCH="${ZEN_RELEASE_BRANCH:-alpha}" \
        ZEN_DISABLE_LTO=1 ZEN_GA_DISABLE_PGO=1
@@ -65,7 +67,6 @@ preflight() {
     || die "profile app-id mismatch"
 
   # engine branding must already contain today's configs art; if not, import must run.
-  ART_HASH=$(shasum -a 256 "$ROOT/configs/branding/release/logo512.png" | cut -d' ' -f1)
   if [[ "$(shasum -a 256 "$ENGINE/browser/branding/release/logo512.png" 2>/dev/null | cut -d' ' -f1)" == "$ART_HASH" ]]; then
     log "engine branding art in sync (logo512 $ART_HASH)"
   else
