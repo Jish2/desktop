@@ -255,6 +255,16 @@ ship() {
     gh release create "$tag" --repo Jish2/desktop --prerelease --title "Satori $version" --notes-file "$WORK/NOTES.md" "$DMG_PATH"
     log "release published: https://github.com/Jish2/desktop/releases/tag/$tag"
   fi
+
+  # Sine mods glue to platform internals that move on upstream merges (twice so
+  # far: FF154 urlbar, FF156 sessionstore). Check every enabled script mod's
+  # module URLs against this build's omni.ja. Warn-only: findings are in the
+  # profile, not the artifact.
+  if command -v sine-mod-doctor >/dev/null 2>&1; then
+    log "sine-mod-doctor — checking Sine mods against packaged build"
+    sine-mod-doctor --app "$PACKAGED_APP" \
+      || log "WARNING: sine-mod-doctor found dead mod URLs on this build (see above)"
+  fi
 }
 
 # ── driver ──
