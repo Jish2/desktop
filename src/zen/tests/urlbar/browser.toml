@@ -24,3 +24,7 @@ support-files = [
 ["browser_essential_tabs.js"]
 
 ["browser_essential_tab_history.js"]
+
+["browser_sidebar_provider.js"]
+
+["browser_urlbar_close_token.js"]

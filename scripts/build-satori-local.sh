@@ -81,15 +81,16 @@ preflight() {
 }
 
 # ───────────────────────── import ─────────────────────────
-# surfer import CANNOT self-heal this engine: engine/.git is an orphan (no
-# commits), so its internal 'git checkout .' reset is a no-op and re-applying
-# patches over a drifted tree fails. We tolerate failure after verifying the
-# patch *intents* are already present (reverse-apply probes).
+# surfer import applies cleanly ONLY onto pristine stock engine. If the tree is
+# already patched (e.g. re-running this pipeline), git-apply fails on every
+# hunk; we then verify the patch *intents* are present via probes instead of
+# paying for a fresh engine download. A full 'npm run init' is the reset path.
 import() {
   [[ "${SKIP_IMPORT:-0}" == "1" ]] && { log "import skipped (SKIP_IMPORT=1)"; return; }
   log "surfer import (tolerant mode)"
   if npm --prefix "$ROOT" run import; then
     log "import succeeded cleanly"
+    copy_locale_pack
     return
   fi
   warn "surfer import failed — verifying tree state by probes instead"
@@ -102,6 +103,17 @@ import() {
   [[ "$(shasum -a 256 "$ENGINE/browser/branding/release/logo512.png" | cut -d' ' -f1)" == "$ART_HASH" ]] \
     || die "engine branding art stale after import attempt"
   log "probes pass — tree is in the intended patched state; proceeding"
+  copy_locale_pack
+}
+
+# Zen's en-US strings are NOT packed by surfer patches; the RPM build would
+# otherwise produce a browser whose Settings render with raw l10n ids.
+copy_locale_pack() {
+  log "copy en-US language pack into engine"
+  python3 "$ROOT/scripts/copy_language_pack.py" en-US \
+    || die "copy_language_pack failed"
+  [[ -f "$ENGINE/browser/locales/en-US/browser/preferences/zen-preferences.ftl" ]] \
+    || die "zen-preferences.ftl missing in engine after locale copy"
 }
 
 # ───────────────────────── build / package ─────────────────────────

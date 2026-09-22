@@ -195,14 +195,14 @@ export class ZenUrlbarProviderEssentials extends UrlbarProvider {
           new lazy.UrlbarResult({
             type: lazy.UrlbarShared.RESULT_TYPE.TAB_SWITCH,
             source: lazy.UrlbarShared.RESULT_SOURCE.TABS,
-            group: UrlbarUtils.RESULT_GROUP.ZEN_ESSENTIAL,
+            group: lazy.UrlbarShared.RESULT_GROUP.ZEN_ESSENTIAL,
             payload: {
               url: info.url,
               title: info.title,
               icon:
                 tab.getAttribute("image") ||
                 UrlbarUtils.getIconForUrl(info.url),
-              userContextId: info.userContextId,
+              userContext: { id: info.userContextId },
               tabGroup: tab.group?.id,
               zenEssentialTarget: token,
             },

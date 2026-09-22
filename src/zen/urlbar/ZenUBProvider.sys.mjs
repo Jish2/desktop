@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/ZenUBEssentialsProvider.sys.mjs",
   ZenUrlbarProviderGlobalActions:
     "resource:///modules/ZenUBActionsProvider.sys.mjs",
+  ZenUrlbarProviderSidebar: "resource:///modules/ZenUBSidebarProvider.sys.mjs",
 });
 
 export function registerZenUrlbarProviders() {

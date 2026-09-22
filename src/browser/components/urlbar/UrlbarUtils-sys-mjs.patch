@@ -2,29 +2,14 @@ diff --git a/browser/components/urlbar/UrlbarUtils.sys.mjs b/browser/components/
 index 94c713470..044f53554 100644
 --- a/browser/components/urlbar/UrlbarUtils.sys.mjs
 +++ b/browser/components/urlbar/UrlbarUtils.sys.mjs
-@@ -127,6 +127,7 @@ export var UrlbarUtils = {
-     SUGGESTED_INDEX: "suggestedIndex",
-     TAIL_SUGGESTION: "tailSuggestion",
-     ZEN_ACTION: "zenAction",
-+    ZEN_ESSENTIAL: "zenEssential",
-     ZEN_WORKSPACE: "zenWorkspace",
-   }),
- 
-@@ -1897,6 +1898,7 @@ export var UrlbarUtils = {
-       // Semantic history results have their own group for sorting purposes but
-       // are reported as "general" results, as they were before the group split.
-       case this.RESULT_GROUP.GENERAL:
-+      case this.RESULT_GROUP.ZEN_ESSENTIAL:
-       case this.RESULT_GROUP.SEMANTIC_HISTORY: {
-         return "general";
-       }
-@@ -2533,6 +2535,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
-       userContextId: {
-         type: "number",
-       },
+@@ -1331,7 +1331,10 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
+   [UrlbarShared.RESULT_TYPE.TAB_SWITCH]: {
+     type: "object",
+     required: ["url"],
+     properties: {
 +      zenEssentialTarget: {
 +        type: "string",
 +      },
-     },
-   },
-   [UrlbarShared.RESULT_TYPE.SEARCH]: {
+       action: {
+         type: "object",
+         properties: {
