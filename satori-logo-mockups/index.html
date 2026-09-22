@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Satori — logo mockups</title>
+<style>
+  :root {
+    --bg: #101010; --card: #1b1b1b; --text: #f2f0e3; --muted: #9a978c;
+    --border: #2c2c2c; --chip: #262626;
+  }
+  body.light {
+    --bg: #eceae3; --card: #fbfaf6; --text: #202020; --muted: #6f6c62;
+    --border: #d8d5ca; --chip: #e4e1d6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 48px 24px 96px;
+    background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    transition: background .2s, color .2s;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+  h1 .jp { color: var(--muted); font-weight: 400; margin-left: 10px; font-size: 20px; }
+  .sub { color: var(--muted); margin: 6px 0 0; }
+  button {
+    font: inherit; color: var(--text); background: var(--chip);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 18px; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.1); }
+  .grid {
+    display: grid; gap: 20px; margin-top: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px; transition: background .2s;
+  }
+  .card h2 { margin: 0 0 2px; font-size: 18px; letter-spacing: -0.01em; }
+  .card .tag { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .preview { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .big { width: 256px; height: 256px; border-radius: 12px; flex: 0 0 auto; }
+  .sizes { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+  .sizes figure { margin: 0; text-align: center; }
+  .sizes img { display: block; border-radius: 6px; }
+  .sizes figcaption { color: var(--muted); font-size: 11px; margin-top: 5px; font-variant-numeric: tabular-nums; }
+  .links { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .links a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    background: var(--chip); border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 999px;
+  }
+  .links a:hover { color: var(--text); }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 48px 0 32px; }
+  .sheet img { max-width: 100%; border-radius: 20px; border: 1px solid var(--border); }
+  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Satori <span class="jp">悟り</span></h1>
+      <p class="sub">Logo mockups derived from the Zen ripple mark — <code>satori-logo-mockups/</code></p>
+    </div>
+    <button id="toggle">☀️ Light background</button>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <hr>
+
+  <section class="sheet">
+    <h2>Contact sheet</h2>
+    <img src="contact-sheet.png" alt="All four mockups side by side">
+    <p class="note">48px favicon strip: <a href="favicon-check.png">favicon-check.png</a> · source of truth: <code>generate.mjs</code> (re-run with <code>node generate.mjs</code>)</p>
+  </section>
+
+</div>
+
+<script>
+const VARIANTS = [
+  {
+    id: "a-lit-center", name: "A · Lit Center",
+    tag: "Zen's exact geometry — the void is filled with amber light.",
+  },
+  {
+    id: "b-dawn", name: "B · Dawn",
+    tag: "Black (release) → twilight blue → dawn. Coral horizon nods to #F76F53.",
+  },
+  {
+    id: "c-enso", name: "C · Ensō",
+    tag: "Outer ring breaks open with a brush-flick taper — the loop releases.",
+  },
+  {
+    id: "d-spark", name: "D · Spark",
+    tag: "Coral gradient sparkle interrupting the middle ring — the flash of insight.",
+  },
+  {
+    id: "e1-gradient-dawn", name: "E1 · Gradient / Dawn",
+    tag: "Exact Zen geometry — rings are a mask over one shared vertical gradient: periwinkle → violet → coral → amber.",
+  },
+  {
+    id: "e2-gradient-radial", name: "E2 · Gradient / Radial",
+    tag: "Light radiating outward through the ripples: amber center → coral → violet → indigo edge.",
+  },
+  {
+    id: "e3-gradient-prism", name: "E3 · Gradient / Prism",
+    tag: "Diagonal pastel spectrum flowing corner to corner through the rings.",
+  },
+];
+
+const SIZE_STOPS = [128, 64, 32, 16];
+
+const grid = document.getElementById("grid");
+for (const v of VARIANTS) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h2>${v.name}</h2>
+    <p class="tag">${v.tag}</p>
+    <div class="preview">
+      <img class="big" src="${v.id}-512.png" alt="${v.name}">
+      <div class="sizes">
+        ${SIZE_STOPS.map(s => `
+          <figure>
+            <img src="${v.id}-512.png" width="${s}" height="${s}" alt="">
+            <figcaption>${s}px</figcaption>
+          </figure>`).join("")}
+        <figure>
+          <img src="${v.id}-48.png" width="48" height="48" alt="">
+          <figcaption>48px real</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="links">
+      <a href="${v.id}.svg" target="_blank">SVG</a>
+      <a href="${v.id}-512.png" target="_blank">PNG 512</a>
+      <a href="${v.id}-48.png" target="_blank">PNG 48</a>
+    </div>`;
+  grid.appendChild(card);
+}
+
+const btn = document.getElementById("toggle");
+btn.addEventListener("click", () => {
+  document.body.classList.toggle("light");
+  const light = document.body.classList.contains("light");
+  btn.textContent = light ? "🌙 Dark background" : "☀️ Light background";
+});
+</script>
+</body>
+</html>

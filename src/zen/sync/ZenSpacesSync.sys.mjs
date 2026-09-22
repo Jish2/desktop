@@ -11,6 +11,7 @@ import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
 import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 import {
   SIDEBAR_COLLECTED_TOPIC,
+  syncLog,
   ZenSpacesSyncModel,
 } from "resource:///modules/zen/ZenSpacesSyncModel.sys.mjs";
 
@@ -74,12 +75,21 @@ class ZenSpacesSyncStore extends Store {
 }
 
 /**
- * Tracker for the Spaces engine. There is no per-event bookkeeping: every
- * time fresh sidebar data is collected (or a container changes), the model
- * diffs the current projections against the last-uploaded snapshot; the
- * score is only bumped when something actually differs.
+ * Tracker for the Spaces engine. The model diffs the current projections
+ * against the last-uploaded snapshot. The score is only bumped when
+ * something actually differs.
  */
 class ZenSpacesSyncTracker extends Tracker {
+  _ignoreAll = false;
+
+  get ignoreAll() {
+    return this._ignoreAll;
+  }
+
+  set ignoreAll(value) {
+    this._ignoreAll = value;
+  }
+
   onStart() {
     for (const topic of TRACKED_TOPICS) {
       Services.obs.addObserver(this, topic);
@@ -93,11 +103,15 @@ class ZenSpacesSyncTracker extends Tracker {
   }
 
   observe(subject, topic) {
+    if (this.ignoreAll) {
+      return;
+    }
     if (topic !== SIDEBAR_COLLECTED_TOPIC) {
       ZenSpacesSyncModel.invalidate();
     }
     try {
       if (ZenSpacesSyncModel.hasPendingChanges()) {
+        syncLog(`tracker: pending changes after ${topic}, requesting sync`);
         this.score += SCORE_INCREMENT_XLARGE;
       }
     } catch (e) {
@@ -124,7 +138,7 @@ export class ZenSpacesSyncEngine extends SyncEngine {
   }
 
   get version() {
-    return 1;
+    return 3;
   }
 
   get syncPriority() {

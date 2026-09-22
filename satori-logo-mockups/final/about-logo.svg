@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><radialGradient id="e2" gradientUnits="userSpaceOnUse" cx="512" cy="512" r="400">
+  <stop offset="0%" stop-color="#FFD08A"/><stop offset="40%" stop-color="#FF9E6B"/>
+  <stop offset="70%" stop-color="#C77DFF"/><stop offset="100%" stop-color="#6E8CFF"/></radialGradient></defs><circle cx="512.00" cy="512.00" r="136.00" fill="none" stroke="url(#e2)" stroke-width="30.00"/><circle cx="512.00" cy="512.00" r="236.00" fill="none" stroke="url(#e2)" stroke-width="48.00"/><circle cx="512.00" cy="512.00" r="356.00" fill="none" stroke="url(#e2)" stroke-width="68.00"/></svg>

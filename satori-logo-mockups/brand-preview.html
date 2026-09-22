@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Satori — shipped branding preview</title>
+<link rel="icon" href="final/logo32.png">
+<style>
+  :root {
+    --bg: #0d0d0f; --card: #161619; --card2: #1c1c20; --line: #2a2a2e;
+    --text: #f2f0e3; --mut: #8f8d84;
+    --grad: linear-gradient(90deg, #FFD08A, #FF9E6B, #C77DFF, #6E8CFF);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 120px; }
+
+  /* hero */
+  .glow {
+    position: relative; border-radius: 28px; overflow: hidden;
+    background: radial-gradient(560px 340px at 50% -80px, rgba(255,158,107,.14), transparent 70%),
+                var(--card);
+    border: 1px solid var(--line); padding: 52px 40px; text-align: center;
+  }
+  .hero-ic { width: 168px; height: 168px; border-radius: 18%; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+  .hero-wm { width: 230px; margin-top: 26px; }
+  h1 { font-size: 15px; font-weight: 500; color: var(--mut); letter-spacing: .04em; margin: 22px 0 0; }
+  .roman { color: var(--text); font-weight: 600; }
+  .bar { height: 3px; width: 220px; margin: 30px auto 0; border-radius: 2px; background: var(--grad); opacity: .9; }
+
+  /* sections */
+  h2 { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--mut); margin: 64px 0 4px; }
+  h2 + p { color: var(--mut); margin: 0 0 22px; font-size: 14px; }
+  .cards { display: grid; gap: 18px; grid-template-columns: repeat(12, 1fr); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 26px; overflow: auto; }
+  .s6 { grid-column: span 6; } .s7 { grid-column: span 7; } .s5 { grid-column: span 5; }
+  .s12 { grid-column: span 12; } .s4 { grid-column: span 4; } .s8 { grid-column: span 8; } .s3 { grid-column: span 3; }
+  @media (max-width: 860px) { .cards > * { grid-column: span 12 !important; } }
+  .card h3 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+  .dim { color: var(--mut); font-size: 12.5px; font-weight: 400; }
+
+  /* size ladder */
+  .ladder { display: flex; align-items: flex-end; gap: 26px; flex-wrap: wrap; }
+  .ladder figure { margin: 0; text-align: center; }
+  .ladder img { display: block; margin: 0 auto; }
+  figcaption { color: var(--mut); font-size: 11px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+  /* favicon strip */
+  .fav { display: flex; gap: 12px; align-items: center; margin-top: 26px; flex-wrap: wrap; }
+  .tab {
+    display: flex; align-items: center; gap: 9px; border-radius: 9px 9px 0 0;
+    padding: 8px 14px; font-size: 12.5px; color: #ddd;
+    background: linear-gradient(#3a3d43, #33363b); border: 1px solid #202; border-bottom: 0;
+  }
+  .tab img { width: 16px; height: 16px; image-rendering: auto; }
+  .tab.light-t { background: linear-gradient(#f4f4f6, #e9e9eb); color: #333; }
+  .chrome { display: flex; gap: 8px; padding-left: 10px; }
+
+  /* platform mocks */
+  .dock {
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.09); border-radius: 22px;
+    margin: 26px auto 4px; padding: 14px 20px; width: fit-content;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 18px 40px rgba(0,0,0,.45);
+  }
+  .dock img { width: 72px; height: 72px; display: block; }
+  .menubar { height: 24px; border-radius: 10px; background: linear-gradient(#2c2c2f, #262628);
+    border: 1px solid var(--line); margin-bottom: 28px; }
+  .tilegrid { display: flex; gap: 14px; margin-top: 8px; }
+  .tile { background: #2b62d9; padding: 16px; border-radius: 4px; text-align: center; min-width: 96px; }
+  .tile.purple { background: #5a3e8f; }
+  .tile img { width: 72px; height: 72px; }
+  .tile span { display: block; color: #fff; font-size: 11px; margin-top: 8px; }
+
+  /* about dialogs */
+  .dialog {
+    width: 300px; margin: 0 auto; text-align: center; border-radius: 12px; padding: 26px 18px 20px;
+    background: #202020; box-shadow: 0 20px 55px rgba(0,0,0,.55), 0 0 0 1px #000;
+  }
+  .dialog img.mark { width: 96px; }
+  .dialog img.wm { width: 150px; margin: 14px 0 6px; }
+  .dialog p { color: #b9b6ab; font-size: 11.5px; margin: 3px 0 0; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .dialog.private { background: #191322; }
+
+  /* generic rows */
+  .row { display: flex; gap: 26px; align-items: flex-end; flex-wrap: wrap; }
+  .chipstyle { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .origin strip, .origin img { image-rendering: -webkit-optimize-contrast; }
+  .wm-swatch { background: #ece9e2; border-radius: 12px; padding: 18px; display: inline-block; }
+  footer { color: var(--mut); font-size: 12.5px; margin-top: 72px; border-top: 1px solid var(--line); padding-top: 22px; }
+  code { background: var(--card2); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+  a { color: #C7B4FF; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="glow">
+    <img class="hero-ic" src="final/logo1024.png" alt="Satori app icon">
+    <br><img class="hero-wm" src="final/about-wordmark.svg" alt="satori browser">
+    <h1>悟 · <span class="roman">sudden enlightenment</span> — the e2 gradient, shipped</h1>
+    <div class="bar"></div>
+  </section>
+
+  <h2>App icon · scale</h2>
+  <p>Exact Zen ripple geometry (rings 136/30, 236/48, 356/68 on a 1024 plate, corner r180, bg #202020); rings carry the radial gradient amber → coral → violet → periwinkle.</p>
+  <section class="cards">
+    <div class="card s12">
+      <div class="ladder">
+        <figure><img src="final/logo256.png" width="256" height="256"><figcaption>logo.png · 1024 render</figcaption></figure>
+        <figure><img src="final/logo128.png" width="128" height="128"><figcaption>128</figcaption></figure>
+        <figure><img src="final/logo64.png" width="64" height="64"><figcaption>64</figcaption></figure>
+        <figure><img src="final/logo48.png" width="48" height="48"><figcaption>48</figcaption></figure>
+        <figure><img src="final/logo32.png" width="32" height="32"><figcaption>32</figcaption></figure>
+        <figure><img src="final/logo24.png" width="24" height="24"><figcaption>24</figcaption></figure>
+        <figure><img src="final/logo16.png" width="16" height="16"><figcaption>16</figcaption></figure>
+      </div>
+      <div class="fav">
+        <div class="tab"><span class="chrome">●●●</span><img src="final/logo16.png" class="origin" alt=""> New Tab — Satori</div>
+        <div class="tab light-t"><span class="chrome">●●●</span><img src="final/logo16.png" class="origin" alt=""> New Tab — Satori</div>
+        <span class="dim">16px favicon in dark / light tab chrome</span>
+      </div>
+    </div>
+  </section>
+
+  <h2>Platforms</h2>
+  <p>macOS uses the Big Sur inset glyph (96 px padding); Windows tiles go near full-bleed; ICOs embed 16→256 frames.</p>
+  <section class="cards">
+    <div class="card s5">
+      <h3>macOS <span class="dim">— logo-mac.png · firefox.icns</span></h3>
+      <div class="menubar"></div>
+      <div style="text-align:center"><div style="display:inline-block">
+        <img src="final/logo-mac.png" width="128" height="128" style="border-radius:0">
+        <div class="dock"><img src="final/logo-mac.png" alt=""></div>
+        <figcaption>Satori &nbsp;·&nbsp; dock</figcaption>
+      </div></div>
+    </div>
+    <div class="card s4">
+      <h3>Windows tiles <span class="dim">— VisualElements_150/70</span></h3>
+      <div class="tilegrid">
+        <div class="tile"><img src="final/VisualElements_150.png" alt=""><span>Satori</span></div>
+      </div>
+      <h3 style="margin-top:30px">ICO variants <span class="dim">— largest frames</span></h3>
+      <div class="row" style="row-gap:18px">
+        <figure><img src="final/firefox-256.png" width="56"><figcaption>firefox.ico</figcaption></figure>
+        <figure><img src="final/firefox64-256.png" width="56"><figcaption>firefox64.ico</figcaption></figure>
+        <figure><img src="final/pbmode-256.png" width="56"><figcaption>pbmode.ico</figcaption></figure>
+      </div>
+      <p class="dim" style="margin-top:10px">pbmode keeps Zen's mask mark — channel-neutral.</p>
+    </div>
+    <div class="card s3">
+      <h3>File associations <span class="dim">— document.ico · document_pdf.ico</span></h3>
+      <div class="row">
+        <figure><img src="final/document-256.png" width="64"><figcaption>.html</figcaption></figure>
+        <figure><img src="final/document_pdf-256.png" width="64"><figcaption>.pdf</figcaption></figure>
+      </div>
+      <p class="dim" style="margin-top:14px">Solid-dark rings for contrast on the white page; banner is Zen's #FF0000 block.</p>
+    </div>
+  </section>
+
+  <h2>In-app surfaces</h2>
+  <p>About dialogs render the transparent <code>about-logo</code> plus the re-baked SF Rounded semibold wordmark (paths, no font dependency).</p>
+  <section class="cards">
+    <div class="card s5">
+      <h3>About Satori</h3>
+      <div class="dialog">
+        <img class="mark" src="final/about-logo@2x.png" alt="">
+        <br><img class="wm" src="final/about-wordmark.svg" alt="satori browser">
+        <p>1.21.16b (64-bit)</p>
+        <p>Mozilla Firefox 154.0.1</p>
+      </div>
+    </div>
+    <div class="card s4">
+      <h3>Private window <span class="dim">— Zen mask kept</span></h3>
+      <div class="dialog private">
+        <img class="mark" width="110" src="final/about-logo-private.png" alt="">
+        <p style="font-family:inherit;font-size:13px;color:#cfc8e8;margin-top:12px">Private Browsing</p>
+      </div>
+    </div>
+    <div class="card s3">
+      <h3>firefox-wordmark.svg <span class="dim">— context-fill #20123a</span></h3>
+      <div class="wm-swatch"><img src="final/firefox-wordmark.svg" width="120" alt="satori"></div>
+      <p class="dim" style="margin-top:12px">Gecko substitutes the context fill at runtime; shown on cream so the ink reads.</p>
+    </div>
+  </section>
+
+  <h2>Installer</h2>
+  <p>NSIS wizard banner now says “satori browser”, arcs peeking over the top edge.</p>
+  <section class="cards">
+    <div class="card s5">
+      <div class="row"><img src="final/wizWatermark.bmp" width="123" alt="" style="image-rendering:pixelated">
+      <figcaption style="align-self:flex-end">wizWatermark.bmp · 164×314 (shown @0.75×)</figcaption></div>
+    </div>
+    <div class="card s7">
+      <h3>Gradient spec <span class="dim">— "e2", radial, r400 from icon center</span></h3>
+      <div class="bar" style="width:100%;margin:22px 0 14px;height:10px;border-radius:5px"></div>
+      <div class="row" style="justify-content:space-between">
+        <code>#FFD08A · 0%</code><code>#FF9E6B · 40%</code><code>#C77DFF · 70%</code><code>#6E8CFF · 100%</code>
+      </div>
+      <p class="dim">Bg <code>#202020</code> · cream brand <code>#F2F0E3</code> · coral accent <code>#F76F53</code> (Zen heritage) · rings 136/30 · 236/48 · 356/68 · corner r180 / 1024 plate.</p>
+    </div>
+  </section>
+
+  <footer>
+    Files previewed from <code>final/</code> — a copy of <code>configs/branding/release/</code> on branch
+    <code>satori-release-branding</code>. Regenerate after art changes:
+    <code>node build-branding.mjs && node copy-preview-assets.mjs</code>.
+    Concept exploration (retired variants a–d, e1, e3): <a href="index.html">index.html</a>.
+  </footer>
+
+</div>
+</body>
+</html>

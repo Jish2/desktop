@@ -1,0 +1,79 @@
+diff --git a/browser/components/urlbar/UrlbarParentController.sys.mjs b/browser/components/urlbar/UrlbarParentController.sys.mjs
+index 000000000..000000001 100644
+--- a/browser/components/urlbar/UrlbarParentController.sys.mjs
++++ b/browser/components/urlbar/UrlbarParentController.sys.mjs
+@@ -1079,7 +1079,8 @@ export class UrlbarParentController {
+   switchToTab({
+     url,
+     searchString,
+     userContextId = 0,
+     tabGroup = null,
++    zenEssentialTarget = null,
+     heuristic = false,
+   }) {
+@@ -1086,19 +1087,29 @@ export class UrlbarParentController {
+     let { gBrowser } = this.browserWindow;
+     let prevTab = gBrowser.selectedTab;
+     let activeSplitView = prevTab.splitview;
+-    let switched = this.browserWindow.switchToTabHavingURI(
+-      Services.io.newURI(url),
+-      true,
+-      {
+-        adoptIntoActiveWindow: lazy.UrlbarPrefs.get(
+-          "switchTabs.adoptIntoActiveWindow"
+-        ),
+-      },
+-      lazy.UrlbarShared.isNonPrivateUserContextId(userContextId)
+-        ? userContextId
+-        : null,
+-      activeSplitView
+-    );
++    let switched;
++    if (zenEssentialTarget) {
++      switched = ChromeUtils.importESModule(
++        "resource:///modules/ZenUBEssentialsProvider.sys.mjs"
++      ).ZenUrlbarProviderEssentials.switchToTarget(
++        { url, userContextId, tabGroup, zenEssentialTarget },
++        this.isPrivate
++      );
++    } else {
++      switched = this.browserWindow.switchToTabHavingURI(
++        Services.io.newURI(url),
++        true,
++        {
++          adoptIntoActiveWindow: lazy.UrlbarPrefs.get(
++            "switchTabs.adoptIntoActiveWindow"
++          ),
++        },
++        lazy.UrlbarShared.isNonPrivateUserContextId(userContextId)
++          ? userContextId
++          : null,
++        activeSplitView
++      );
++    }
+ 
+     if (switched) {
+       if (!activeSplitView && prevTab.isEmpty) {
+@@ -1113,13 +1123,15 @@ export class UrlbarParentController {
+     // TODO (Bug 1865757): We should not show a "switchtotab" result for tabs
+     // that are not currently open. Find out why tabs are not being properly
+     // unregistered when they are being closed.
+-    console.error(`Tried to switch to non-existent tab: ${url}`);
+-    lazy.UrlbarProviderOpenTabs.unregisterOpenTab(
+-      url,
+-      userContextId,
+-      tabGroup,
+-      this.isPrivate
+-    );
++    if (!zenEssentialTarget) {
++      console.error(`Tried to switch to non-existent tab: ${url}`);
++      lazy.UrlbarProviderOpenTabs.unregisterOpenTab(
++        url,
++        userContextId,
++        tabGroup,
++        this.isPrivate
++      );
++    }
+   }
+ 
+   /**

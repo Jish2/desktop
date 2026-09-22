@@ -109,8 +109,8 @@
         if (AppConstants.platform == "macosx") {
           const targetRadius = window.matchMedia("(-moz-mac-tahoe-theme)")
             .matches
-            ? 14
-            : 10;
+            ? 11
+            : 9;
           document.documentElement.style.setProperty(
             "--zen-border-radius",
             targetRadius + "px"
@@ -125,7 +125,7 @@
           // Windows defaults to 8px
           document.documentElement.style.setProperty(
             "--zen-border-radius",
-            "8px"
+            "9px"
           );
         }
       } else {

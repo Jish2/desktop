@@ -47,6 +47,9 @@ document.addEventListener(
           case "cmd_zenSplitViewContextMenu":
             gZenViewSplitter.contextSplitTabs();
             break;
+          case "cmd_zenCtxShareSplitView":
+            gZenViewSplitter.contextShareSplitView();
+            break;
           case "cmd_zenCopyCurrentURLMarkdown":
             gZenCommonActions.copyCurrentURLAsMarkdownToClipboard();
             break;
@@ -95,6 +98,9 @@ document.addEventListener(
             break;
           case "cmd_zenCtxDeleteWorkspace":
             gZenWorkspaces.contextDeleteWorkspace(event);
+            break;
+          case "cmd_zenCtxShareWorkspace":
+            gZenWorkspaces.contextShareWorkspace();
             break;
           case "cmd_zenChangeWorkspaceName":
             gZenVerticalTabsManager.renameTabStart({
@@ -163,10 +169,18 @@ document.addEventListener(
           }
           case "cmd_zenDuplicateTab": {
             const selectedTabs = gBrowser.selectedTabs;
-            let insertAt = selectedTabs.at(-1)._tPos + 1;
+            let insertAt = selectedTabs.at(-1).index + 1;
             for (const tab of selectedTabs) {
               gBrowser.duplicateTab(tab, true, { tabIndex: insertAt++ });
             }
+            break;
+          }
+          case "cmd_zenToggleLibrary": {
+            const { ZenLibrary } = ChromeUtils.importESModule(
+              "moz-src:///zen/library/ZenLibrary.mjs",
+              { global: "current" }
+            );
+            ZenLibrary.toggle();
             break;
           }
           default:

@@ -27,7 +27,7 @@ a Firefox-based browser focused on productivity.
 
 ### Firefox Versions
 
-- Satori Release is currently built using Firefox version `154.0.1`.
+- Satori Release is currently built using Firefox version `156.0`.
 - The inherited Twilight configuration remains an upstream Zen development channel.
 
 ### Contributing
