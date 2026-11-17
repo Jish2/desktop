@@ -1,8 +1,16 @@
 diff --git a/browser/themes/shared/urlbar/view-proton.css b/browser/themes/shared/urlbar/view-proton.css
-index 30b1e0665..738ca5a69 100644
+index 2dc499352..e51bc0cec 100644
 --- a/browser/themes/shared/urlbar/view-proton.css
 +++ b/browser/themes/shared/urlbar/view-proton.css
-@@ -343,6 +343,11 @@
+@@ -188,7 +188,6 @@
+       min-height: var(--urlbarview-row-min-height);
+     }
+     :root[uidensity="touch"] & {
+-      padding-block: 11px;
+     }
+   }
+ 
+@@ -371,6 +370,11 @@
    stroke: var(--toolbar-field-background-color-focus);
  
    /* Favicon badges have this priority: pinned > bookmark. */

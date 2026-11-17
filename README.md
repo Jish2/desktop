@@ -27,7 +27,7 @@ a Firefox-based browser focused on productivity.
 
 ### Firefox Versions
 
-- Satori Release is currently built using Firefox version `156.0`.
+- Satori Release is currently built using Firefox version `160.0`.
 - The inherited Twilight configuration remains an upstream Zen development channel.
 
 ### Contributing
@@ -38,7 +38,7 @@ Satori is open source, and contributions are welcome. Please read the [contribut
 
 #### Partners
 
-Thanks to all the partners of Zen for their support and contributions:
+Thanks to all the [sponsors](https://zen-browser.app/#sponsors) of Zen for their support and contributions, including:
 
 <a href="https://blacksmith.sh">
   <img src="./docs/assets/blacksmith-yellow.png" width="350px"/>
