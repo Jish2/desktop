@@ -6,6 +6,11 @@
 support-files = [
   "head.js",
 ]
+prefs = [
+  # Defaults to @IS_TWILIGHT@, which is false for the release brand, but the
+  # unread-dot tests exercise the enabled behavior.
+  "zen.theme.essentials-unread-dot=true",
+]
 
 ["browser_copy_selected_urls.js"]
 

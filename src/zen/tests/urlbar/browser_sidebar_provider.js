@@ -28,7 +28,7 @@ async function searchSidebarRows(value) {
   });
   const rows = [];
   for (let index = 0; index < UrlbarTestUtils.getResultCount(window); index++) {
-    const { result } = await UrlbarTestUtils.getRowAt(window, index);
+    const { result } = UrlbarTestUtils.getRowAt(window, index);
     if (result.providerName == PROVIDER_NAME) {
       rows.push({ index, result });
     }

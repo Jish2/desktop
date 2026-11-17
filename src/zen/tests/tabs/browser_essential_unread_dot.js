@@ -64,11 +64,23 @@ add_task(async function test_unread_dot_pref_disabled() {
       set: [["zen.theme.essentials-unread-dot", false]],
     });
     preferenceChanged = true;
-    ok(!hasUnreadDot(tab), "The disabled preference hides the dot");
+    // `-moz-pref` media queries are re-evaluated asynchronously, so the dot
+    // does not disappear in the same tick the preference changes.
+    await TestUtils.waitForCondition(
+      () => !hasUnreadDot(tab),
+      "The disabled preference hides the dot",
+      2000,
+      50
+    );
 
     await SpecialPowers.popPrefEnv();
     preferenceChanged = false;
-    ok(hasUnreadDot(tab), "Re-enabling the preference restores the dot");
+    await TestUtils.waitForCondition(
+      () => hasUnreadDot(tab),
+      "Re-enabling the preference restores the dot",
+      2000,
+      50
+    );
   } finally {
     if (preferenceChanged) {
       await SpecialPowers.popPrefEnv();

@@ -67,7 +67,7 @@ add_task(async function test_duplicate_matching_identity_and_selection() {
     );
     is(
       badgeStyle.content,
-      "attr(zen-duplicate-count)",
+      '"2"',
       "The active tab renders its matching-tab count attribute"
     );
     is(badgeStyle.position, "absolute", "The count badge is positioned");

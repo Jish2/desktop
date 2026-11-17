@@ -6,6 +6,9 @@
 const { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
+const { PlacesUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesUtils.sys.mjs"
+);
 const { UrlbarProviderOpenTabs } = ChromeUtils.importESModule(
   "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs"
 );
@@ -14,6 +17,18 @@ const { UrlbarTestUtils } = ChromeUtils.importESModule(
 );
 
 const TEST_ROOT = "https://example.com/browser/zen/tests/urlbar/";
+
+/**
+ * Switch-to-tab results carry a `moz-action:switchtab` URL rather than the plain
+ * page URL, so unwrap it before comparing against the URL the tab was opened
+ * with.
+ *
+ * @param {string} url The result payload URL.
+ * @returns {string} The underlying page URL.
+ */
+function actionUrlOf(url) {
+  return PlacesUtils.parseActionUrl(url)?.params?.url ?? url;
+}
 const TEST_URL = `${TEST_ROOT}zen-urlbar-container-title-test-617db8`;
 const ESSENTIAL_TEST_URL = `${TEST_ROOT}zen-urlbar-essential-title-test-617db8`;
 const WORKSPACE_NAMES = [
@@ -76,10 +91,13 @@ add_task(async function test_container_tabs_use_their_live_labels() {
 
     const queryContext = await gURLBar.lastQueryContextPromise;
     const results = queryContext.results
-      .filter(result => result.payload.url == TEST_URL)
+      .filter(
+        result =>
+          actionUrlOf(result.payload.url) == TEST_URL
+      )
       .map(result => ({
         title: result.payload.title,
-        userContextId: result.payload.userContextId,
+        userContextId: result.payload.userContext?.id,
       }))
       .sort((a, b) => a.userContextId - b.userContextId);
 
@@ -169,7 +187,7 @@ add_task(async function test_inactive_container_essential_uses_live_label() {
       .filter(result => result.payload.url == ESSENTIAL_TEST_URL)
       .map(result => ({
         title: result.payload.title,
-        userContextId: result.payload.userContextId,
+        userContextId: result.payload.userContext?.id,
       }))
       .sort((a, b) => a.userContextId - b.userContextId);
 

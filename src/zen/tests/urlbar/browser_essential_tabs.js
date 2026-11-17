@@ -51,7 +51,7 @@ async function search(win, value) {
   const rows = [];
   const count = UrlbarTestUtils.getResultCount(win);
   for (let i = 0; i < count; i++) {
-    rows.push(await UrlbarTestUtils.getRowAt(win, i));
+    rows.push(UrlbarTestUtils.getRowAt(win, i));
   }
   return rows;
 }
@@ -65,11 +65,11 @@ async function closePopup(win) {
 }
 
 async function pickRow(win, row, condition, message) {
-  win.gURLBar.pickResult(
-    row.result,
-    new KeyboardEvent("keydown", { key: "Enter" }),
-    row
-  );
+  win.gURLBar.pickResult({
+    result: row.result,
+    event: new KeyboardEvent("keydown", { key: "Enter" }),
+    element: row,
+  });
   await TestUtils.waitForCondition(condition, message);
 }
 
@@ -244,7 +244,7 @@ add_task(async function test_container_essential_switches_workspace() {
 
   try {
     const rows = await search(window, "container mail");
-    Assert.equal(rows[0].result.payload.userContextId, 1);
+    Assert.equal(rows[0].result.payload.userContext?.id, 1);
     await pickRow(
       window,
       rows[0],
@@ -315,11 +315,11 @@ add_task(async function test_stale_result_does_not_open_url() {
     await removeTab(essential);
     const tabCount = gBrowser.tabs.length;
     const sourceUrl = gBrowser.currentURI.spec;
-    gURLBar.pickResult(
+    gURLBar.pickResult({
       result,
-      new KeyboardEvent("keydown", { key: "Enter" }),
-      row
-    );
+      event: new KeyboardEvent("keydown", { key: "Enter" }),
+      element: row,
+    });
     await TestUtils.waitForTick();
 
     Assert.equal(
