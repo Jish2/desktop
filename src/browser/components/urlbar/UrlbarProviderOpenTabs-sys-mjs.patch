@@ -1,18 +1,18 @@
 diff --git a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
-index e732e7a..b2386e6 100644
+index 06f787280..287c278cd 100644
 --- a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
 +++ b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
-@@ -15,7 +15,9 @@ import {
- const lazy = {};
+@@ -14,7 +14,9 @@ import {
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  
- ChromeUtils.defineESModuleGetters(lazy, {
+ const lazy = XPCOMUtils.declareLazy({
 +  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
    PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 +  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
    ProvidersManager:
      "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
    UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
-@@ -139,6 +141,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
+@@ -135,6 +137,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
      return uniqueUrls;
    }
  

@@ -1,5 +1,5 @@
 diff --git a/browser/components/urlbar/content/UrlbarInputBase.mjs b/browser/components/urlbar/content/UrlbarInputBase.mjs
-index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c03f7a0fd 100644
+index d8a26721f..9ae347cfd 100644
 --- a/browser/components/urlbar/content/UrlbarInputBase.mjs
 +++ b/browser/components/urlbar/content/UrlbarInputBase.mjs
 @@ -114,6 +114,7 @@ const lazy = XPCOMUtils?.declareLazy({
@@ -191,7 +191,29 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      }
  
      if (isCanonized) {
-@@ -3211,20 +3289,107 @@ ${
+@@ -2032,9 +2110,10 @@ ${
+         // Behaviour is reversed with SecondaryActions, default behaviour is to navigate
+         // and button is provided to switch to tab.
+         if (
+-          this.hasAttribute("action-override") ||
+-          (UrlbarPrefs.get("secondaryActions.switchToTab") &&
+-            element?.dataset.action !== "tabswitch")
++          !result.payload.zenEssentialTarget &&
++          (this.hasAttribute("action-override") ||
++            (UrlbarPrefs.get("secondaryActions.switchToTab") &&
++              element?.dataset.action !== "tabswitch"))
+         ) {
+           where = "current";
+           break;
+@@ -2061,6 +2140,7 @@ ${
+           searchString,
+           userContextId: result.payload.userContext?.id,
+           tabGroup: result.payload.tabGroup,
++          zenEssentialTarget: result.payload.zenEssentialTarget,
+           heuristic: result.heuristic,
+         });
+ 
+@@ -3211,20 +3291,107 @@ ${
      return state;
    }
  
@@ -303,7 +325,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
    }
  
    /**
-@@ -3233,7 +3398,9 @@ ${
+@@ -3233,7 +3400,9 @@ ${
     * sheet the background paints is bigger than the input.
     */
    updatePopover() {
@@ -314,7 +336,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      if (popoverOpen) {
        this.#openPopover();
      } else {
-@@ -3268,7 +3435,7 @@ ${
+@@ -3268,7 +3437,7 @@ ${
      forceUnifiedSearchButtonAvailable = false
    ) {
      let prevState = this.getAttribute("pageproxystate");
@@ -323,7 +345,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      this.setAttribute("pageproxystate", state);
      this._inputContainer.setAttribute("pageproxystate", state);
      this._identityBox?.setAttribute("pageproxystate", state);
-@@ -3503,6 +3670,91 @@ ${
+@@ -3503,6 +3672,91 @@ ${
      this.view.close();
    }
  
@@ -415,7 +437,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
    /**
     * Sets the input field value.
     *
-@@ -3840,6 +4092,52 @@ ${
+@@ -3840,6 +4094,52 @@ ${
      );
    }
  
@@ -468,7 +490,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
    _updateUrlTooltip() {
      if (this.focused || !this._overflowing) {
        this.inputField.removeAttribute("title");
-@@ -3950,6 +4248,7 @@ ${
+@@ -3950,6 +4250,7 @@ ${
    }
  
    _toggleActionOverride(event) {
@@ -476,7 +498,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      if (
        event.keyCode == KeyEvent.DOM_VK_SHIFT ||
        event.keyCode == KeyEvent.DOM_VK_ALT ||
-@@ -4048,9 +4347,10 @@ ${
+@@ -4048,9 +4349,10 @@ ${
      if (!this.#isAddressbar) {
        return val;
      }
@@ -490,7 +512,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      // Only trim value if the directionality doesn't change to RTL and we're not
      // showing a strikeout https protocol.
      return UrlbarContentUtils.isTextDirectionRTL(trimmedValue, window) ||
-@@ -4246,6 +4546,11 @@ ${
+@@ -4246,6 +4548,11 @@ ${
      keepViewOpen = false,
      browserId = null,
    }) {
@@ -502,7 +524,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      let keyDownEnterDeferred;
      if (
        this._keyDownEnterDeferred &&
-@@ -4573,6 +4878,7 @@ ${
+@@ -4573,6 +4880,7 @@ ${
            this.setResultForCurrentValue(null);
            this.handleCommand();
            this.parentController.clearLastQueryContextCache();
@@ -510,7 +532,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
  
            this._suppressStartQuery = false;
          });
-@@ -4584,7 +4890,6 @@ ${
+@@ -4584,7 +4892,6 @@ ${
          // Close the results pane, because paste and go doesn't want a result
          // selection. This has to happen before the menu opens: hiding the
          // popover once it's open keeps it from showing (bug 2037468).
@@ -518,7 +540,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
  
          // The edit context menu is shared with other inputs in chrome, and
          // only the items we add here conflict, so mark it for this opening
-@@ -4889,7 +5194,11 @@ ${
+@@ -4889,7 +5196,11 @@ ${
      if (!engineName && !source && !this.hasAttribute("searchmode")) {
        return;
      }
@@ -531,7 +553,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      if (this._searchModeIndicatorTitle) {
        this._searchModeIndicatorTitle.textContent = "";
        this._searchModeIndicatorTitle.removeAttribute("data-l10n-id");
-@@ -5199,6 +5508,7 @@ ${
+@@ -5199,6 +5510,7 @@ ${
  
      document.l10n.setAttributes(
        this.inputField,
@@ -539,7 +561,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
        l10nId,
        l10nId == "urlbar-placeholder-with-name"
          ? { name: engineName }
-@@ -5249,6 +5559,12 @@ ${
+@@ -5249,6 +5561,12 @@ ${
      }
  
      logger().debug("Blur Event");
@@ -552,7 +574,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      // We cannot count every blur events after a missed engagement as abandoment
      // because the user may have clicked on some view element that executes
      // a command causing a focus change. For example opening preferences from
-@@ -5303,6 +5619,7 @@ ${
+@@ -5303,6 +5621,7 @@ ${
      if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
        this.view.close();
      }
@@ -560,7 +582,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
  
      // We may have hidden popup notifications, show them again if necessary.
      if (
-@@ -5328,6 +5645,11 @@ ${
+@@ -5328,6 +5647,11 @@ ${
    }
  
    _on_click(event) {
@@ -572,7 +594,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
      switch (event.target) {
        case this.inputField:
        case this._inputContainer:
-@@ -5388,6 +5710,7 @@ ${
+@@ -5388,6 +5712,7 @@ ${
      if (!this._hideFocus) {
        this.toggleAttribute("focused", true);
      }
@@ -580,7 +602,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
  
      // If the value was trimmed, check whether we should untrim it.
      // This is necessary when a protocol was typed, but the whole url has
-@@ -5422,10 +5745,11 @@ ${
+@@ -5422,10 +5747,11 @@ ${
        }
        if (untrim) {
          this.setValue(this._untrimmedValue);
@@ -593,7 +615,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
        this.view.autoOpen({ event });
      } else {
        if (this._untrimOnFocusAfterKeydown) {
-@@ -5469,9 +5793,16 @@ ${
+@@ -5469,9 +5795,16 @@ ${
    }
  
    _on_mousedown(event) {
@@ -611,7 +633,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
          if (
            event.target != this.inputField &&
            event.target != this._inputContainer &&
-@@ -5482,6 +5813,10 @@ ${
+@@ -5482,6 +5815,10 @@ ${
  
          this.focusedViaMousedown = !this.focused;
          this.#preventClickSelectsAll = this.focused;
@@ -622,7 +644,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
  
          // Keep the focus status, since the attribute may be changed
          // upon calling this.focus().
-@@ -5517,7 +5852,7 @@ ${
+@@ -5517,7 +5854,7 @@ ${
          }
          // Don't close the view when clicking on a tab; we may want to keep the
          // view open on tab switch, and the TabSelect event arrived earlier.
@@ -631,7 +653,7 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
            break;
          }
  
-@@ -5819,7 +6154,7 @@ ${
+@@ -5819,7 +6156,7 @@ ${
      // When we are in actions search mode we can show more results so
      // increase the limit.
      let maxResults =
@@ -640,26 +662,3 @@ index d8a26721fd0320423484029f9709ae5cee35e13c..016bcd0090ccb34450d90319eb74741c
          ? UrlbarPrefs.get("maxRichResults")
          : UNLIMITED_MAX_RESULTS;
      let options = {
-@@ -1958,9 +1958,10 @@ ${urlbarInputBase}
-         // Behaviour is reversed with SecondaryActions, default behaviour is to navigate
-         // and button is provided to switch to tab.
-         if (
--          this.hasAttribute("action-override") ||
--          (UrlbarPrefs.get("secondaryActions.switchToTab") &&
--            element?.dataset.action !== "tabswitch")
-+          !result.payload.zenEssentialTarget &&
-+          (this.hasAttribute("action-override") ||
-+            (UrlbarPrefs.get("secondaryActions.switchToTab") &&
-+              element?.dataset.action !== "tabswitch"))
-         ) {
-           where = "current";
-           break;
-@@ -1984,7 +1986,8 @@ ${urlbarInputBase}
-         this.controller.switchToTab({
-           url: result.payload.url,
-           searchString,
-           userContextId: result.payload.userContext?.id,
-           tabGroup: result.payload.tabGroup,
-+          zenEssentialTarget: result.payload.zenEssentialTarget,
-           heuristic: result.heuristic,
-         });

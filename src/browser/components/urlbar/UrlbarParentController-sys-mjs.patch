@@ -1,21 +1,19 @@
 diff --git a/browser/components/urlbar/UrlbarParentController.sys.mjs b/browser/components/urlbar/UrlbarParentController.sys.mjs
-index 000000000..000000001 100644
+index 6586dde99..859b8d141 100644
 --- a/browser/components/urlbar/UrlbarParentController.sys.mjs
 +++ b/browser/components/urlbar/UrlbarParentController.sys.mjs
-@@ -1079,7 +1079,8 @@ export class UrlbarParentController {
-   switchToTab({
-     url,
+@@ -1144,25 +1144,36 @@ export class UrlbarParentController {
      searchString,
      userContextId = 0,
      tabGroup = null,
 +    zenEssentialTarget = null,
      heuristic = false,
    }) {
-@@ -1086,19 +1087,29 @@ export class UrlbarParentController {
      let { gBrowser } = this.browserWindow;
      let prevTab = gBrowser.selectedTab;
      let activeSplitView = prevTab.splitview;
--    let switched = this.browserWindow.switchToTabHavingURI(
+-    let switched = lazy.URILoadingHelper.switchToTabHavingURI(
+-      this.browserWindow,
 -      Services.io.newURI(url),
 -      true,
 -      {
@@ -37,7 +35,8 @@ index 000000000..000000001 100644
 +        this.isPrivate
 +      );
 +    } else {
-+      switched = this.browserWindow.switchToTabHavingURI(
++      switched = lazy.URILoadingHelper.switchToTabHavingURI(
++        this.browserWindow,
 +        Services.io.newURI(url),
 +        true,
 +        {
@@ -54,7 +53,7 @@ index 000000000..000000001 100644
  
      if (switched) {
        if (!activeSplitView && prevTab.isEmpty) {
-@@ -1113,13 +1123,15 @@ export class UrlbarParentController {
+@@ -1177,13 +1188,15 @@ export class UrlbarParentController {
      // TODO (Bug 1865757): We should not show a "switchtotab" result for tabs
      // that are not currently open. Find out why tabs are not being properly
      // unregistered when they are being closed.
