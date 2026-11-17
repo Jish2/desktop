@@ -127,7 +127,7 @@ function isValidTarget(tab, entry, payload, isPrivate) {
  */
 export class ZenUrlbarProviderEssentials extends UrlbarProvider {
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+    return lazy.UrlbarShared.PROVIDER_TYPE.PROFILE;
   }
 
   async isActive(queryContext) {
