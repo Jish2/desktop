@@ -587,7 +587,7 @@ class nsZenWorkspaces {
     let spaceElement = this.workspaceElement(aTabData.zenWorkspace);
     if (!spaceElement?.tabsContainer) {
       // The space is gone, or the tab never had one. Keep it in the active
-      // space, #clearAnyZombieTabs takes care of it later on if need be.
+      // space, clearAnyZombieTabs takes care of it later on if need be.
       spaceElement = this.activeWorkspaceElement;
     }
     return aTabData.pinned
@@ -971,7 +971,7 @@ class nsZenWorkspaces {
     }
     this._resolveInitialized();
     this.#settleAdoptedTabs();
-    this.#clearAnyZombieTabs(); // Dont call with await
+    this.clearAnyZombieTabs(); // Dont call with await
     delete this._resolveInitialized;
 
     this.updateWorkspacesChangeContextMenu();

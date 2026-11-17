@@ -12,7 +12,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  SessionStore: "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
   UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
   UrlbarShared: "chrome://browser/content/urlbar/UrlbarShared.mjs",
   gZenTabHistory: "resource:///modules/ZenTabHistory.sys.mjs",
@@ -113,11 +113,15 @@ function isValidTarget(tab, entry, payload, isPrivate) {
   }
 
   const info = getTabInfo(tab);
+  // FF160 moved the container id to payload.userContext.id; keep reading the
+  // flat field too so results built before that change still validate.
+  const payloadUserContextId =
+    payload.userContext?.id ?? payload.userContextId;
   return (
     info.url == entry.url &&
     info.url == payload.url &&
     info.userContextId == entry.userContextId &&
-    info.userContextId == payload.userContextId &&
+    info.userContextId == payloadUserContextId &&
     scoreMatch(info, entry.terms) > 0
   );
 }
@@ -201,14 +205,14 @@ export class ZenUrlbarProviderEssentials extends UrlbarProvider {
               title: info.title,
               icon:
                 tab.getAttribute("image") ||
-                UrlbarUtils.getIconForUrl(info.url),
-              userContext: { id: info.userContextId },
+                lazy.UrlbarShared.getIconForUrl(info.url),
+              userContext: UrlbarUtils.getUserContextData(info.userContextId),
               tabGroup: tab.group?.id,
               zenEssentialTarget: token,
             },
             highlights: {
-              title: UrlbarUtils.HIGHLIGHT.TYPED,
-              url: UrlbarUtils.HIGHLIGHT.TYPED,
+              title: lazy.UrlbarShared.HIGHLIGHT.TYPED,
+              url: lazy.UrlbarShared.HIGHLIGHT.TYPED,
             },
           })
         );

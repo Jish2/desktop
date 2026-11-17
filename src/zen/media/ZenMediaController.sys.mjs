@@ -552,7 +552,7 @@ export class ZenMediaController extends ZenUIComponent {
   // Media controllers that are actively playing anywhere in this window,
   // across every tab — regardless of whether the cards UI is enabled.
   get #playingControllers() {
-    return gBrowser.browsers
+    return this.window.gBrowser.browsers
       .map(browser => browser.browsingContext?.mediaController)
       .filter(controller => controller?.isActive && controller.isPlaying);
   }

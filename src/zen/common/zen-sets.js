@@ -55,8 +55,7 @@
       }),
     cmd_zenChangeWorkspaceIcon: () => gZenWorkspaces.changeWorkspaceIcon(),
     cmd_zenManageWorkspaces: () => lazy.ZenLibrary.toggle("spaces"),
-    cmd_zenOpenWorkspaceCreation: event =>
-      gZenWorkspaces.openWorkspaceCreation(event),
+    cmd_zenOpenWorkspaceCreation: () => gZenWorkspaces.openWorkspaceCreation(),
     cmd_zenCloseUnpinnedTabs: () => gZenWorkspaces.closeAllUnpinnedTabs(),
     cmd_zenUnloadWorkspace: () => gZenWorkspaces.unloadWorkspace(),
     cmd_zenUnloadAllOtherWorkspace: () =>
