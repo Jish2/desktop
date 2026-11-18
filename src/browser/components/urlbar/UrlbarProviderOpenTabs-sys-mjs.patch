@@ -1,5 +1,5 @@
 diff --git a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
-index 06f787280..287c278cd 100644
+index 06f787280..cdbc42eeb 100644
 --- a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
 +++ b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
 @@ -14,7 +14,9 @@ import {
@@ -12,9 +12,9 @@ index 06f787280..287c278cd 100644
    ProvidersManager:
      "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
    UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
-@@ -135,6 +137,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
-     return uniqueUrls;
-   }
+@@ -62,6 +64,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
+    */
+   static memoryTableInitialized = false;
  
 +  /**
 +   * Return the live title of an open tab.
@@ -27,7 +27,8 @@ index 06f787280..287c278cd 100644
 +  static getOpenTabTitle(url, userContextId, groupId) {
 +    userContextId = parseInt(`${userContextId}`);
 +    groupId = groupId ?? null;
-+    let isInPrivateWindow = userContextId == PRIVATE_USER_CONTEXT_ID;
++    let isInPrivateWindow =
++      userContextId == lazy.UrlbarShared.PRIVATE_USER_CONTEXT_ID;
 +
 +    for (let window of lazy.BrowserWindowTracker.orderedWindows) {
 +      if (
@@ -47,10 +48,9 @@ index 06f787280..287c278cd 100644
 +        }
 +
 +        let browser = tab.linkedBrowser;
-+        let tabUrl =
-+          browser?.registeredOpenURI?.spec ?? browser?.currentURI?.spec;
-+        if (tabUrl == url) {
-+          return tab.label || null;
++        let tabUrl = browser?.currentURI?.spec;
++        if (tabUrl == url && tab.label) {
++          return tab.label;
 +        }
 +      }
 +    }
@@ -58,5 +58,5 @@ index 06f787280..287c278cd 100644
 +  }
 +
    /**
-    * Return urls registered in the memory table.
-    * This is mostly for testing purposes.
+    * Return unique urls that are open for given user context id.
+    *
