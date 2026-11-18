@@ -141,3 +141,56 @@ Zen Sine mods live in the browser profile and are tracked in **yadm**
 - Run yadm from `$HOME` (worktree root); paths are `Library/Application
   Support/zen/...`.
 - `yadm commit -m` heredocs break on parens — use `yadm commit -F <file>`.
+
+## Debugging a mod against a specific build
+
+`~/.local/bin/sine-mod-doctor` compares the mods in a profile against the
+*installed* build and reports dead module URLs, missing exports, and missing
+platform contracts:
+
+```sh
+~/.local/bin/sine-mod-doctor --app /Applications/Satori.app \
+  --profile "$HOME/Library/Application Support/zen/Profiles/<profile>"
+```
+
+Run it first after any rebuild. It finds the class of breakage where a mod
+imports something the engine moved or deleted, which is invisible until the mod
+runs.
+
+For interactive work, `npm run zenmod -- <command>` drives a headless isolated
+profile without Sine. See `.cursor/skills/zen-mod-testing/SKILL.md` for the
+command list; `npm run zenmod -- doctor` verifies the setup.
+
+### A copied profile will not load the mod
+
+Sine injects a `.uc.js` only into processes whose URL matches that script's
+`include` patterns in `mods.json`, for example
+`chrome://browser/content/browser.xhtml`. Copying a profile to `/tmp` and
+launching it with `about:blank` means the mod never loads, so any instrumentation
+you added to it produces no output and looks like a silent failure.
+
+Symptoms of this mistake: your injected logger never fires, and the only
+console output is from other components. Launch the profile normally (a real
+browser window) or make the window URL match the mod's `include` patterns.
+
+The reliable alternative for a specific build is to run the mod in the real
+profile with debug logging on:
+
+1. Set the mod's debug pref (for the command palette,
+   `zen-command-palette.debug-mode`).
+2. Read errors from the Browser Console (`Cmd+Shift+J`), which evaluates in
+   chrome scope.
+
+Remember that opening the Browser Console blurs the URL bar, which closes any
+open results panel. To inspect urlbar state, start the query from the console
+instead of trying to type while it is open:
+
+```js
+gURLBar.value = "exam";
+gURLBar.startQuery();
+await gURLBar.lastQueryContextPromise.then(c => c.results.map(r => r.providerName))
+```
+
+`lastQueryContext` does not exist; the property is `lastQueryContextPromise`,
+and it resolves to the context. Reaching for the wrong one yields zeros that
+look like "no results".

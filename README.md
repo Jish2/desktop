@@ -98,6 +98,16 @@ npm run package
 The six-job cap keeps local builds from saturating the machine. Lower it to four
 if the system is still sluggish. CI builds are not affected.
 
+> **`npm run build` + `npm run package` produces an ad hoc signed app.**
+> That is fine for throwaway builds, but the result has no Developer ID
+> signature and no entitlements, so iCloud Keychain passkeys and Touch ID will
+> not work. To build a local install you actually use, run the scripted
+> pipeline, `scripts/build-satori-local.sh`, which signs with Developer ID,
+> embeds the provisioning profile, and verifies the passkey entitlement. See
+> [`docs/macos-fork-passkeys.md`](./docs/macos-fork-passkeys.md) for the signing
+> model and [`docs/local-build-pipeline.md`](./docs/local-build-pipeline.md) for
+> the script's phases and knobs.
+
 For JavaScript-only changes after the first full build,
 `npm run build:ui -- --jobs 6` can be used instead of `npm run build`. Use the
 full build for native or core changes. Run a full build before browser-chrome
@@ -164,7 +174,15 @@ npm run install:macos
 
 The installer refuses to run while Satori or the legacy Zen app is open. It validates the packaged localization and source commit, copies both Sine bootloader files into the staged app, backs up the profile to the Desktop, rotates the installed app to an adjacent `.backup`, and then relaunches Satori.
 
-After launch, check `about:profiles` if Satori appears to be a fresh install. Select the desired profile rather than deleting or copying over profile files. The local app is unsigned, so macOS may require opening it through Control-click > Open, and automatic updates may not work.
+The installer does not check the code signature, so it will replace a properly signed app with an ad hoc one. Check before installing if passkeys matter:
+
+```sh
+codesign -dv /Applications/Satori.app 2>&1 | grep -E 'Authority|Signature'
+```
+
+A line reading `Signature=adhoc` means passkeys and Touch ID will not work in that build.
+
+After launch, check `about:profiles` if Satori appears to be a fresh install. Select the desired profile rather than deleting or copying over profile files. An ad hoc build is unsigned, so macOS may require opening it through Control-click > Open, and automatic updates may not work.
 
 #### Troubleshooting
 

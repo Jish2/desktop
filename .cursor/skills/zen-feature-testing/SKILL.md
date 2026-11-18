@@ -92,6 +92,29 @@ harness, generic polling uses `TestUtils.waitForCondition`.
 For conditionally visible actions, test both branches: available while the
 precondition holds and unavailable after the action completes.
 
+### Assert what the user sees, not just what the code produced
+
+A populated-but-invisible UI passes every state assertion. The FF160 sync
+shipped a bug where the urlbar produced ten results and rendered ten rows, but
+`.urlbarView` stayed `display: none`, so the address bar looked empty. Row
+counts, `view.isOpen`, and `context.results` all agreed the feature worked.
+
+When a test asserts that a surface appeared, assert its appearance:
+
+```js
+// Insufficient: true even when the panel has zero height.
+Assert.greater(rows, 0, "Rows were rendered");
+Assert.ok(view.isOpen, "View is open");
+
+// Required: catches a hidden or collapsed surface.
+Assert.notEqual(getComputedStyle(view).display, "none", "View is displayed");
+Assert.ok(view.getBoundingClientRect().height > 0, "View has layout height");
+```
+
+Confirm a new assertion actually fails without the fix. Removing the CSS rule
+and rerunning should turn the test red; a test that passes both ways has proven
+nothing.
+
 ## Test harness recovery
 
 Classify failures before changing product code. An extension-install,
