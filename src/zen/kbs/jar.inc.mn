@@ -1,0 +1,8 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Legacy userChrome-mod compatibility view over Zen's shortcuts. Loaded into
+# browser.xhtml only, and evaluated lazily, so it costs nothing until a mod
+# reads window.gZenKeyboardShortcutsManager.
+        content/browser/zen-components/ZenKeyboardShortcutsCompat.mjs        (../../zen/kbs/ZenKeyboardShortcutsCompat.mjs)
