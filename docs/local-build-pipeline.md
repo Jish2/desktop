@@ -29,10 +29,11 @@ preflight import build package extract inject sign verify dmg notarize ship
 ```
 
 Pass a phase name to start from it, which is how you avoid a full rebuild while
-iterating on signing:
+iterating on signing. Note the dispatcher runs the named phase **and every phase
+after it** — there is no compile-only mode:
 
 ```sh
-scripts/build-satori-local.sh            # full pipeline
+scripts/build-satori-local.sh            # preflight only (check-only)
 scripts/build-satori-local.sh sign       # reuse the existing package
 SKIP_NOTARIZE=1 scripts/build-satori-local.sh sign
 ```
@@ -46,6 +47,30 @@ SKIP_NOTARIZE=1 scripts/build-satori-local.sh sign
 | `sign` | Copies the profile to `engine/embedded.provisionprofile`, installs the entitlements, and runs `mach macos-sign -e production`. |
 | `verify` | Confirms the signature and greps the entitlement back out of the signed app. |
 | `dmg` / `notarize` / `ship` | Rebuilds the DMG, notarizes, staples, and optionally uploads. |
+
+## Make front-end
+
+`make` wraps the same script. Prefer it: the targets are discoverable and the
+install step refuses to ship an app that lacks the passkey entitlement.
+
+```sh
+make help          # list targets
+make check         # preflight only
+make full          # preflight, then build -> sign -> signed DMG
+make install       # install the SIGNED app from staging
+make status        # installed vs built: version, stamp, signing, passkeys
+make doctor        # check local Sine mods against the installed build
+make uninstall-safe   # restore /Applications/Satori.app.backup
+```
+
+Notarization is off by default (`SKIP_NOTARIZE=1`) because most local runs have
+no `satori-notary` keychain profile. Opt in with `make full SKIP_NOTARIZE=0`.
+
+Resume mid-pipeline with `make resume PHASE=sign`.
+
+`make install` installs from `$WORK/staging/Satori.app`, **not** from the DMG
+that `npm run package` writes. That distinction matters: the npm DMG is ad hoc
+signed and has no entitlements, so installing it silently breaks macOS passkeys.
 
 Relevant environment knobs are documented in the script header
 (`SKIP_IMPORT`, `SKIP_NOTARIZE`, `SIGN_IDENTITY`, `NOTARY_PROFILE`,
