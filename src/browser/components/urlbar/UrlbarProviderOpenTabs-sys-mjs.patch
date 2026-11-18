@@ -1,20 +1,20 @@
 diff --git a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
-index e732e7a..b2386e6 100644
+index 06f787280..cdbc42eeb 100644
 --- a/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
 +++ b/browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs
-@@ -15,7 +15,9 @@ import {
- const lazy = {};
+@@ -14,7 +14,9 @@ import {
+ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
  
- ChromeUtils.defineESModuleGetters(lazy, {
+ const lazy = XPCOMUtils.declareLazy({
 +  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
    PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 +  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
    ProvidersManager:
      "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
    UrlbarResult: "chrome://browser/content/urlbar/UrlbarResult.mjs",
-@@ -139,6 +141,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
-     return uniqueUrls;
-   }
+@@ -62,6 +64,47 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
+    */
+   static memoryTableInitialized = false;
  
 +  /**
 +   * Return the live title of an open tab.
@@ -27,7 +27,8 @@ index e732e7a..b2386e6 100644
 +  static getOpenTabTitle(url, userContextId, groupId) {
 +    userContextId = parseInt(`${userContextId}`);
 +    groupId = groupId ?? null;
-+    let isInPrivateWindow = userContextId == PRIVATE_USER_CONTEXT_ID;
++    let isInPrivateWindow =
++      userContextId == lazy.UrlbarShared.PRIVATE_USER_CONTEXT_ID;
 +
 +    for (let window of lazy.BrowserWindowTracker.orderedWindows) {
 +      if (
@@ -47,10 +48,9 @@ index e732e7a..b2386e6 100644
 +        }
 +
 +        let browser = tab.linkedBrowser;
-+        let tabUrl =
-+          browser?.registeredOpenURI?.spec ?? browser?.currentURI?.spec;
-+        if (tabUrl == url) {
-+          return tab.label || null;
++        let tabUrl = browser?.currentURI?.spec;
++        if (tabUrl == url && tab.label) {
++          return tab.label;
 +        }
 +      }
 +    }
@@ -58,5 +58,5 @@ index e732e7a..b2386e6 100644
 +  }
 +
    /**
-    * Return urls registered in the memory table.
-    * This is mostly for testing purposes.
+    * Return unique urls that are open for given user context id.
+    *

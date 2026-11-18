@@ -21,7 +21,7 @@ async function search(win, value) {
   const rows = [];
   const count = UrlbarTestUtils.getResultCount(win);
   for (let i = 0; i < count; i++) {
-    rows.push(await UrlbarTestUtils.getRowAt(win, i));
+    rows.push(UrlbarTestUtils.getRowAt(win, i));
   }
   return rows;
 }
@@ -56,11 +56,11 @@ add_task(async function test_cross_window_essential_records_source() {
       return;
     }
 
-    gURLBar.pickResult(
-      row.result,
-      new KeyboardEvent("keydown", { key: "Enter" }),
-      row
-    );
+    gURLBar.pickResult({
+      result: row.result,
+      event: new KeyboardEvent("keydown", { key: "Enter" }),
+      element: row,
+    });
     await TestUtils.waitForCondition(
       () => otherWindow.gBrowser.selectedTab == targetTab,
       "The Essential target should be selected"

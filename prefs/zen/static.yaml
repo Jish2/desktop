@@ -8,9 +8,8 @@
   mirror: always
   type: static
 
-- name: zen.swipe.is-fast-swipe
+- name: zen.keyboard.global-shortcuts.enabled
   cpptype: bool
   value: true
   mirror: always
-  hidden: true
   type: static

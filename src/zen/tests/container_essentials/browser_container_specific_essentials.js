@@ -101,6 +101,8 @@ add_task(async function test_Remove_Orphaned_Container_Essentials() {
       }
     }
   }
+});
+
 add_task(async function test_Essentials_Hidden_Workspace_Creation() {
   const originalWorkspace = gZenWorkspaces.getActiveWorkspace();
 
