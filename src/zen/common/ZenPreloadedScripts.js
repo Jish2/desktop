@@ -30,6 +30,9 @@
     "chrome://browser/content/zen-components/ZenEmojiPicker.mjs",
     "chrome://browser/content/zen-components/ZenDownloadAnimation.mjs",
     "resource:///modules/zen/share/ZenShareManager.mjs",
+    // Legacy shim for userChrome mods that read
+    // window.gZenKeyboardShortcutsManager, which gh-16163 removed.
+    "chrome://browser/content/zen-components/ZenKeyboardShortcutsCompat.mjs",
   ];
 
 
