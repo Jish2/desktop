@@ -14,6 +14,7 @@
 # Knobs (env):
 #   SKIP_IMPORT=1     skip surfer import entirely (tree already patched)
 #   SKIP_NOTARIZE=1   stop after signing the DMG (no Apple round-trip)
+#   STOP_AFTER=phase  end the run once <phase> completes (e.g. STOP_AFTER=dmg)
 #   UPLOAD=1          actually create the GitHub prerelease + upload the DMG
 #   SIGN_IDENTITY=..  override "Developer ID Application: Joshua Goon (4NNR2DBK2F)"
 #   NOTARY_PROFILE=.. override keychain profile name (default satori-notary)
@@ -238,8 +239,12 @@ ship() {
   local version sha tag
   version=$(defaults read "$PACKAGED_APP/Contents/Info" CFBundleShortVersionString)
   sha=$(shasum -a 256 "$DMG_PATH" | cut -d' ' -f1)
+  # `grep` exits 1 when no prior preview exists for this version; under
+  # `set -euo pipefail` that would abort the whole pipeline here, after the DMG
+  # has already been built and signed. Treat "no previous tag" as 0.
   tag=$(gh release list --repo Jish2/desktop --limit 20 --json tagName --jq '.[].tagName' \
-        | grep -E "satori-${version}-preview\.[0-9]+$" | sed 's/.*preview\.//' | sort -n | tail -1)
+        | { grep -E "satori-${version}-preview\.[0-9]+$" || true; } \
+        | sed 's/.*preview\.//' | sort -n | tail -1)
   tag="satori-${version}-preview.$((${tag:-0} + 1))"
   {
     echo "Next release tag : $tag"
@@ -272,9 +277,19 @@ ship() {
 start="${1:-preflight}"
 have_phase "$start" || die "unknown start phase '$start' (one of: ${PHASES[*]})"
 if [[ "$start" == "preflight" ]]; then preflight; exit 0; fi  # preflight alone = check-only
+# Optional STOP_AFTER=<phase> ends the run once that phase finishes. Without it
+# the dispatcher performs the named phase and every phase after it, which means
+# `build` also ships — surprising when all you wanted was a signed DMG.
+stop_after="${STOP_AFTER:-}"
+if [[ -n "$stop_after" ]]; then
+  have_phase "$stop_after" || die "unknown STOP_AFTER phase '$stop_after' (one of: ${PHASES[*]})"
+fi
 go=0
 for p in "${PHASES[@]}"; do
   [[ "$p" == "$start" ]] && go=1
-  [[ "$go" == "1" ]] && "$p"
+  if [[ "$go" == "1" ]]; then
+    "$p"
+    [[ -n "$stop_after" && "$p" == "$stop_after" ]] && break
+  fi
 done
 log "pipeline complete → $WORK"

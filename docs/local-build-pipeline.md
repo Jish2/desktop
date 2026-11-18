@@ -68,6 +68,12 @@ no `satori-notary` keychain profile. Opt in with `make full SKIP_NOTARIZE=0`.
 
 Resume mid-pipeline with `make resume PHASE=sign`.
 
+`make full` stops after the `dmg` phase. The script's dispatcher otherwise runs
+every phase after the one you name, so starting at `build` also notarizes and
+ships. If you name a phase directly and want to stop early, set
+`STOP_AFTER=<phase>`; `make ship` is the explicit way to finish a build through
+release notes.
+
 `make install` installs from `$WORK/staging/Satori.app`, **not** from the DMG
 that `npm run package` writes. That distinction matters: the npm DMG is ad hoc
 signed and has no entitlements, so installing it silently breaks macOS passkeys.

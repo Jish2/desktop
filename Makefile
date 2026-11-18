@@ -27,7 +27,7 @@ VERSION  := $(shell node -p "require('$(ROOT)/surfer.json').brands.release.relea
 # Most local runs have no notary credentials; notarization is opt-in.
 SKIP_NOTARIZE ?= 1
 
-.PHONY: help check full resume import install uninstall-safe doctor status \
+.PHONY: help check full resume ship import install uninstall-safe doctor status \
         clean-staging clean
 
 help: ## Show available targets
@@ -46,9 +46,13 @@ check: ## Preflight only: identity, provisioning profile, passkey capability, en
 import: ## Run surfer import (engine -> patched tree), then continue the pipeline
 	@SKIP_NOTARIZE=$(SKIP_NOTARIZE) $(SCRIPT) import
 
-full: ## Full pipeline: preflight, then build -> sign -> signed DMG
+full: ## Full pipeline: preflight, then build -> sign -> signed DMG (stops before shipping)
 	@$(SCRIPT) preflight
-	@SKIP_NOTARIZE=$(SKIP_NOTARIZE) $(SCRIPT) build
+	@SKIP_NOTARIZE=$(SKIP_NOTARIZE) STOP_AFTER=dmg $(SCRIPT) build
+
+ship: ## Finish an existing build through release notes (+ UPLOAD=1 to publish)
+	@test -d "$(APP)" || { echo "No signed app at $(APP). Run 'make full' first." >&2; exit 1; }
+	@UPLOAD=$(UPLOAD) $(SCRIPT) ship
 
 resume: ## Resume the pipeline at PHASE=<name> (see docs/local-build-pipeline.md)
 	@if [ -z "$(PHASE)" ]; then \
